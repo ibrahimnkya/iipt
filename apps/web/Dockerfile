@@ -42,8 +42,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/apps/web/public ./apps/web/public
 
 # Set the correct permission for prerender cache
-mkdir .next
-chown nextjs:nodejs .next
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
