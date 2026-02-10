@@ -1,0 +1,187 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String    @id @default(uuid())
+  role             Role      @default(USER)
+  fullName         String
+  email            String    @unique
+  password         String
+  phone            String
+  postalAddress    String?
+  physicalAddress  String?
+  brelaNumber      String?
+  tinNumber        String?
+  natureOfBusiness String?
+  signature        String?
+  createdAt        DateTime  @default(now())
+  orders           Order[]
+  payments         Payment[]
+}
+
+model InsurancePolicy {
+  id                     String    @id @default(uuid())
+  name                   String
+  code                   String    @unique
+  clauseType             String
+  description            String?
+  isActive               Boolean   @default(true)
+  cargoTypes             Json?
+  transportModes         Json?
+  incoterms              Json?
+  geoScope               String    @default("Worldwide")
+  originPorts            Json?
+  destinationPorts       Json?
+  valuationBasis         String    @default("CIF")
+  minSumInsured          Float?
+  maxSumInsured          Float?
+  currency               String    @default("USD")
+  rate                   Float     @default(0)
+  minPremium             Float?
+  hazardLoading          Float?
+  discount               Float?
+  vat                    Float     @default(18)
+  additionalCovers       Json?
+  startDate              DateTime  @default(now())
+  endDate                DateTime?
+  autoInvoice            Boolean   @default(true)
+  autoIssue              Boolean   @default(true)
+  requiresManualApproval Boolean   @default(false)
+  internalNotes          String?
+  createdAt              DateTime  @default(now())
+  orders                 Order[]
+}
+
+model Order {
+  id                    String           @id @default(uuid())
+  userId                String
+  policyId              String
+  status                OrderStatus      @default(PENDING)
+  sadNumber             String?
+  hsCode                String?
+  validationStatus      ValidationStatus @default(VALID)
+  gateOutStatus         GateOutStatus    @default(NA)
+  incoterm              String
+  cargoDescription      String
+  cargoNature           String
+  packagingMethod       String
+  totalWeight           String
+  originPort            String
+  destinationPort       String
+  transportMode         String
+  dispatchDate          DateTime
+  transShipment         Boolean
+  transShipmentNote     String?
+  vesselName            String?
+  carrierName           String?
+  invoiceValue          Float
+  currency              String
+  valuationBasis        String
+  valuationBasisOther   String?
+  sumInsured            Float
+  proposerName          String           @default("")
+  proposerCapacity      String           @default("")
+  proposerCapacityOther String?
+  originCountry         String           @default("")
+  destinationCountry    String           @default("")
+  incotermOther         String?
+  packagingMethodOther  String?
+  weightUnit            String           @default("KG")
+  storageRequired       Boolean          @default(false)
+  storageLocation       String?
+  storageDuration       String?
+  claimsHistory         Boolean          @default(false)
+  claimsDetails         String?
+  coverType             String           @default("ICC(A)")
+  additionalCovers      String?
+  declarationDate       DateTime         @default(now())
+  acceptTerms           Boolean          @default(false)
+  createdAt             DateTime         @default(now())
+  invoice               Invoice?
+  policy                InsurancePolicy  @relation(fields: [policyId], references: [id])
+  user                  User             @relation(fields: [userId], references: [id])
+}
+
+model Invoice {
+  id       String        @id @default(uuid())
+  orderId  String        @unique
+  amount   Float
+  status   InvoiceStatus @default(UNPAID)
+  issuedAt DateTime      @default(now())
+  paidAt   DateTime?
+  order    Order         @relation(fields: [orderId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  userId        String
+  invoiceId     String
+  provider      String
+  phoneNumber   String
+  amount        Float
+  status        PaymentStatus
+  transactionId String?
+  createdAt     DateTime      @default(now())
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+model Port {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  country   String
+  type      String   @default("SEA")
+  createdAt DateTime @default(now())
+}
+
+model HSCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String
+  category    String?
+  createdAt   DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  ISSUED
+  CANCELLED
+  PAID
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum ValidationStatus {
+  VALID
+  HOLD
+}
+
+enum GateOutStatus {
+  PENDING
+  APPROVED
+  NA
+}

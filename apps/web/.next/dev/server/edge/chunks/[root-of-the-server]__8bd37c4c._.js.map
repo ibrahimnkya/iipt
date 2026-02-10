@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 16, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/apps/web/src/middleware.ts"],"sourcesContent":["import { withAuth } from \"next-auth/middleware\";\nimport { NextResponse } from \"next/server\";\n\nexport default withAuth(\n    function middleware(req) {\n        const token = req.nextauth.token;\n        const path = req.nextUrl.pathname;\n\n        if (path.startsWith(\"/admin\") && token?.role !== \"ADMIN\") {\n            return NextResponse.redirect(new URL(\"/\", req.url));\n        }\n    },\n    {\n        callbacks: {\n            authorized: ({ token }) => !!token,\n        },\n    }\n);\n\nexport const config = {\n    matcher: [\"/admin/:path*\", \"/dashboard/:path*\"],\n};\n"],"names":[],"mappings":";;;;;;AAAA;AACA;AAAA;;;uCAEe,IAAA,8JAAQ,EACnB,SAAS,WAAW,GAAG;IACnB,MAAM,QAAQ,IAAI,QAAQ,CAAC,KAAK;IAChC,MAAM,OAAO,IAAI,OAAO,CAAC,QAAQ;IAEjC,IAAI,KAAK,UAAU,CAAC,aAAa,OAAO,SAAS,SAAS;QACtD,OAAO,gMAAY,CAAC,QAAQ,CAAC,IAAI,IAAI,KAAK,IAAI,GAAG;IACrD;AACJ,GACA;IACI,WAAW;QACP,YAAY,CAAC,EAAE,KAAK,EAAE,GAAK,CAAC,CAAC;IACjC;AACJ;AAGG,MAAM,SAAS;IAClB,SAAS;QAAC;QAAiB;KAAoB;AACnD"}}]
+}

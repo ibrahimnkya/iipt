@@ -1,0 +1,461 @@
+[00:00:07.977] Server  WARN    ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:08.583] Server  LOG     ✓ Ready in 6s
+[00:00:12.915] Server  LOG     ○ Compiling /login ...
+[00:00:17.326] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:19.135] Server  LOG     DB Connection String: "postgresql://postgres:****@localhost:5433/tiips_db?schema=public"
+[00:00:19.138] Server  LOG     ✅ Creating NEW Prisma Client instance
+[00:00:19.210] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/apps/web/...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html
+                          lang="en"
+-                         className="light"
+-                         style={{color-scheme:"light"}}
+                        >
+                  ...
+
+[00:00:20.435] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/login" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/apps/web/...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html
+                          lang="en"
+-                         className="light"
+-                         style={{color-scheme:"light"}}
+                        >
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           data-new-gr-c-s-check-loaded="14.1272.0"
+-                           data-gr-ext-installed=""
+                          >
+                  ...
+
+[00:00:20.436] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <RedirectErrorBoundary router={{...}}>
+      <InnerLayoutRouter url="/login" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} segmentPath={[...]} ...>
+        <SegmentViewNode type="page" pagePath="/apps/web/...">
+          <SegmentTrieNode>
+          <ClientPageRoot Component={function LoginPage} serverProvidedParams={{...}}>
+            <LoginPage params={Promise} searchParams={Promise}>
+              <Suspense fallback={<div>}>
+                <LoginForm>
+                  <div className="min-h-scre...">
+                    <div className="hidden lg:...">
+                      <div>
+                      <div className="relative z-10">
+                        <LinkComponent href="/" className="flex items...">
+                          <a
++                           className="flex items-center gap-3"
+-                           className="flex items-center gap-3 docs-creator"
+                            ref={function}
+                            onClick={function onClick}
+                            onMouseEnter={function onMouseEnter}
+                            onTouchStart={function onTouchStart}
+                            href="/"
+                          >
+                      <div>
+                      <div className="relative z...">
+                        <span>
+                        <div className="flex gap-6">
+                          <LinkComponent href="#" className="hover:text...">
+                            <a
++                             className="hover:text-white transition-colors"
+-                             className="hover:text-white transition-colors docs-creator"
+                              ref={function}
+                              onClick={function onClick}
+                              onMouseEnter={function onMouseEnter}
+                              onTouchStart={function onTouchStart}
+                              href="#"
+                            >
++                             Help
+                          <LinkComponent href="#" className="hover:text...">
+                            <a
++                             className="hover:text-white transition-colors"
+-                             className="hover:text-white transition-colors docs-creator"
+                              ref={function}
+                              onClick={function onClick}
+                              onMouseEnter={function onMouseEnter}
+                              onTouchStart={function onTouchStart}
+                              href="#"
+                            >
++                             Privacy
+                    <div className="w-full lg:...">
+                      <div className="w-full max...">
+                        <div className="space-y-4">
+                          <div className="lg:hidden ...">
+                            <LinkComponent href="/" className="flex items...">
+                              <a
++                               className="flex items-center gap-3"
+-                               className="flex items-center gap-3 docs-creator"
+                                ref={function}
+                                onClick={function onClick}
+                                onMouseEnter={function onMouseEnter}
+                                onTouchStart={function onTouchStart}
+                                href="/"
+                              >
+                          ...
+                        <form className="space-y-6" onSubmit={function handleSubmit}>
+                          ...
+                            <div className="flex justi...">
+                              <label>
+                              <LinkComponent href="#" className="text-xs fo...">
+                                <a
++                                 className="text-xs font-bold text-brand-blue hover:underline"
+-                                 className="text-xs font-bold text-brand-blue hover:underline docs-creator"
+                                  ref={function}
+                                  onClick={function onClick}
+                                  onMouseEnter={function onMouseEnter}
+                                  onTouchStart={function onTouchStart}
+                                  href="#"
+                                >
++                                 Forgot password?
+                          ...
+                            <p className="text-gray-...">
+                              <LinkComponent href="/register" className="text-brand...">
+                                <a
++                                 className="text-brand-blue hover:text-blue-700 transition-colors"
+-                                 className="text-brand-blue hover:text-blue-700 transition-colors docs-creator"
+                                  ref={function}
+                                  onClick={function onClick}
+                                  onMouseEnter={function onMouseEnter}
+                                  onTouchStart={function onTouchStart}
+                                  href="/register"
+                                >
++                                 Join TIIP for free
+        ...
+      ...
+
+[00:00:20.655] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/dashboard..." notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/apps/web/...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html
+                          lang="en"
+-                         className="light"
+-                         style={{color-scheme:"light"}}
+                        >
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           data-new-gr-c-s-check-loaded="14.1272.0"
+-                           data-gr-ext-installed=""
+                          >
+                            ...
+                              <div data-sidebar="sidebar" data-slot="sidebar-inner" className="bg-sidebar...">
+                                <div>
+                                ...
+                                  <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-button" data-size="lg" ...>
+                                    <LinkComponent href="/" onClick={function closeMobileMenu} data-slot="sidebar-me..." ...>
+                                      <a
+                                        data-slot="sidebar-menu-button"
+                                        data-sidebar="menu-button"
+                                        data-size="lg"
+                                        data-active={false}
++                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+-                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+                                        ref={function}
+                                        onClick={function onClick}
+                                        onMouseEnter={function onMouseEnter}
+                                        onTouchStart={function onTouchStart}
+                                        href="/"
+                                      >
+                                ...
+                                  <ul data-slot="sidebar-menu" data-sidebar="menu" className="flex w-ful...">
+                                    ...
+                                      <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-button" ...>
+                                        <LinkComponent href="/dashboard" onClick={function} data-slot="sidebar-me..." ...>
+                                          <a
+                                            data-slot="sidebar-menu-button"
+                                            data-sidebar="menu-button"
+                                            data-size="default"
+                                            data-active={false}
++                                           className={"peer/menu-button flex w-full items-center gap-2 overflow-hidd..."}
+-                                           className={"peer/menu-button flex w-full items-center gap-2 overflow-hidd..."}
+                                            aria-describedby={undefined}
+                                            data-state="closed"
+                                            onPointerMove={function handleEvent}
+                                            onPointerLeave={function handleEvent}
+                                            onPointerDown={function handleEvent}
+                                            onFocus={function handleEvent}
+                                            onBlur={function handleEvent}
+                                            ref={function}
+                                            onClick={function onClick}
+                                            onMouseEnter={function onMouseEnter}
+                                            onTouchStart={function onTouchStart}
+                                            href="/dashboard"
+                                          >
+                                    ...
+                                      <ul data-slot="sidebar-me..." data-sidebar="menu-sub" className="mx-3.5 fle...">
+                                        ...
+                                          <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-sub-b..." ...>
+                                            <LinkComponent href="/dashboard..." onClick={function closeMobileMenu} ...>
+                                              <a
+                                                data-slot="sidebar-menu-sub-button"
+                                                data-sidebar="menu-sub-button"
+                                                data-size="md"
+                                                data-active={true}
++                                               className={"ring-sidebar-ring active:text-sidebar-accent-foreground [..."}
+-                                               className={"ring-sidebar-ring active:text-sidebar-accent-foreground [..."}
+                                                ref={function}
+                                                onClick={function onClick}
+                                                onMouseEnter={function onMouseEnter}
+                                                onTouchStart={function onTouchStart}
+                                                href="/dashboard/orders"
+                                              >
+                                        ...
+                                          <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-sub-b..." ...>
+                                            <LinkComponent href="/dashboard..." onClick={function closeMobileMenu} ...>
+                                              <a
+                                                data-slot="sidebar-menu-sub-button"
+                                                data-sidebar="menu-sub-button"
+                                                data-size="md"
+                                                data-active={false}
++                                               className={"ring-sidebar-ring active:text-sidebar-accent-foreground [..."}
+-                                               className={"ring-sidebar-ring active:text-sidebar-accent-foreground [..."}
+                                                ref={function}
+                                                onClick={function onClick}
+                                                onMouseEnter={function onMouseEnter}
+                                                onTouchStart={function onTouchStart}
+                                                href="/dashboard/orders/create"
+                                              >
+                                    ...
+                                ...
+                                  <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-button" ...>
+                                    <LinkComponent href="/dashboard..." onClick={function} data-slot="sidebar-me..." ...>
+                                      <a
+                                        data-slot="sidebar-menu-button"
+                                        data-sidebar="menu-button"
+                                        data-size="default"
+                                        data-active={false}
++                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+-                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+                                        aria-describedby={undefined}
+                                        data-state="closed"
+                                        onPointerMove={function handleEvent}
+                                        onPointerLeave={function handleEvent}
+                                        onPointerDown={function handleEvent}
+                                        onFocus={function handleEvent}
+                                        onBlur={function handleEvent}
+                                        ref={function}
+                                        onClick={function onClick}
+                                        onMouseEnter={function onMouseEnter}
+                                        onTouchStart={function onTouchStart}
+                                        href="/dashboard/help"
+                                      >
+                                ...
+                  ...
+
+[00:00:21.430] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/dashboard" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="/apps/web/...">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <script>
+                      <RootLayout>
+                        <html
+                          lang="en"
+-                         className="light"
+-                         style={{color-scheme:"light"}}
+                        >
+                          <body
+                            className="geist_a71539c9-module__T19VSG__variable geist_mono_8d43a2aa-module__8Li5zG__var..."
+-                           data-new-gr-c-s-check-loaded="14.1272.0"
+-                           data-gr-ext-installed=""
+                          >
+                            ...
+                              <div data-sidebar="sidebar" data-slot="sidebar-inner" className="bg-sidebar...">
+                                <div>
+                                ...
+                                  <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-button" data-size="lg" ...>
+                                    <LinkComponent href="/" onClick={function closeMobileMenu} data-slot="sidebar-me..." ...>
+                                      <a
+                                        data-slot="sidebar-menu-button"
+                                        data-sidebar="menu-button"
+                                        data-size="lg"
+                                        data-active={false}
++                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+-                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+                                        ref={function}
+                                        onClick={function onClick}
+                                        onMouseEnter={function onMouseEnter}
+                                        onTouchStart={function onTouchStart}
+                                        href="/"
+                                      >
+                                ...
+                                  <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-button" ...>
+                                    <LinkComponent href="/dashboard" onClick={function} data-slot="sidebar-me..." ...>
+                                      <a
+                                        data-slot="sidebar-menu-button"
+                                        data-sidebar="menu-button"
+                                        data-size="default"
+                                        data-active={true}
++                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+-                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+                                        aria-describedby={undefined}
+                                        data-state="closed"
+                                        onPointerMove={function handleEvent}
+                                        onPointerLeave={function handleEvent}
+                                        onPointerDown={function handleEvent}
+                                        onFocus={function handleEvent}
+                                        onBlur={function handleEvent}
+                                        ref={function}
+                                        onClick={function onClick}
+                                        onMouseEnter={function onMouseEnter}
+                                        onTouchStart={function onTouchStart}
+                                        href="/dashboard"
+                                      >
+                                ...
+                                  <Slot.SlotClone data-slot="sidebar-me..." data-sidebar="menu-button" ...>
+                                    <LinkComponent href="/dashboard..." onClick={function} data-slot="sidebar-me..." ...>
+                                      <a
+                                        data-slot="sidebar-menu-button"
+                                        data-sidebar="menu-button"
+                                        data-size="default"
+                                        data-active={false}
++                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+-                                       className={"peer/menu-button flex w-full items-center gap-2 overflow-hidden p..."}
+                                        aria-describedby={undefined}
+                                        data-state="closed"
+                                        onPointerMove={function handleEvent}
+                                        onPointerLeave={function handleEvent}
+                                        onPointerDown={function handleEvent}
+                                        onFocus={function handleEvent}
+                                        onBlur={function handleEvent}
+                                        ref={function}
+                                        onClick={function onClick}
+                                        onMouseEnter={function onMouseEnter}
+                                        onTouchStart={function onTouchStart}
+                                        href="/dashboard/help"
+                                      >
+                                ...
+                  ...
+
+[00:00:24.113] Server  LOG     prisma:query "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"userId\", \"public\".\"Order\".\"policyId\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"sadNumber\", \"public\".\"Order\".\"hsCode\", \"public\".\"Order\".\"validationStatus\"::text, \"public\".\"Order\".\"gateOutStatus\"::text, \"public\".\"Order\".\"incoterm\", \"public\".\"Order\".\"cargoDescription\", \"public\".\"Order\".\"cargoNature\", \"public\".\"Order\".\"packagingMethod\", \"public\".\"Order\".\"totalWeight\", \"public\".\"Order\".\"originPort\", \"public\".\"Order\".\"destinationPort\", \"public\".\"Order\".\"transportMode\", \"public\".\"Order\".\"dispatchDate\", \"public\".\"Order\".\"transShipment\", \"public\".\"Order\".\"transShipmentNote\", \"public\".\"Order\".\"vesselName\", \"public\".\"Order\".\"carrierName\", \"public\".\"Order\".\"invoiceValue\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"valuationBasis\", \"public\".\"Order\".\"valuationBasisOther\", \"public\".\"Order\".\"sumInsured\", \"public\".\"Order\".\"proposerName\", \"public\".\"Order\".\"proposerCapacity\", \"public\".\"Order\".\"proposerCapacityOther\", \"public\".\"Order\".\"originCountry\", \"public\".\"Order\".\"destinationCountry\", \"public\".\"Order\".\"incotermOther\", \"public\".\"Order\".\"packagingMethodOther\", \"public\".\"Order\".\"weightUnit\", \"public\".\"Order\".\"storageRequired\", \"public\".\"Order\".\"storageLocation\", \"public\".\"Order\".\"storageDuration\", \"public\".\"Order\".\"claimsHistory\", \"public\".\"Order\".\"claimsDetails\", \"public\".\"Order\".\"coverType\", \"public\".\"Order\".\"additionalCovers\", \"public\".\"Order\".\"declarationDate\", \"public\".\"Order\".\"acceptTerms\", \"public\".\"Order\".\"createdAt\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"userId\" = $1 ORDER BY \"public\".\"Order\".\"createdAt\" DESC OFFSET $2"
+[00:00:24.227] Server  LOG     prisma:query "SELECT \"public\".\"InsurancePolicy\".\"id\", \"public\".\"InsurancePolicy\".\"name\", \"public\".\"InsurancePolicy\".\"code\", \"public\".\"InsurancePolicy\".\"clauseType\", \"public\".\"InsurancePolicy\".\"description\", \"public\".\"InsurancePolicy\".\"isActive\", \"public\".\"InsurancePolicy\".\"cargoTypes\", \"public\".\"InsurancePolicy\".\"transportModes\", \"public\".\"InsurancePolicy\".\"incoterms\", \"public\".\"InsurancePolicy\".\"geoScope\", \"public\".\"InsurancePolicy\".\"originPorts\", \"public\".\"InsurancePolicy\".\"destinationPorts\", \"public\".\"InsurancePolicy\".\"valuationBasis\", \"public\".\"InsurancePolicy\".\"minSumInsured\", \"public\".\"InsurancePolicy\".\"maxSumInsured\", \"public\".\"InsurancePolicy\".\"currency\", \"public\".\"InsurancePolicy\".\"rate\", \"public\".\"InsurancePolicy\".\"minPremium\", \"public\".\"InsurancePolicy\".\"hazardLoading\", \"public\".\"InsurancePolicy\".\"discount\", \"public\".\"InsurancePolicy\".\"vat\", \"public\".\"InsurancePolicy\".\"additionalCovers\", \"public\".\"InsurancePolicy\".\"startDate\", \"public\".\"InsurancePolicy\".\"endDate\", \"public\".\"InsurancePolicy\".\"autoInvoice\", \"public\".\"InsurancePolicy\".\"autoIssue\", \"public\".\"InsurancePolicy\".\"requiresManualApproval\", \"public\".\"InsurancePolicy\".\"internalNotes\", \"public\".\"InsurancePolicy\".\"createdAt\" FROM \"public\".\"InsurancePolicy\" WHERE \"public\".\"InsurancePolicy\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.261] Server  LOG     prisma:query "SELECT \"public\".\"Invoice\".\"id\", \"public\".\"Invoice\".\"orderId\", \"public\".\"Invoice\".\"amount\", \"public\".\"Invoice\".\"status\"::text, \"public\".\"Invoice\".\"issuedAt\", \"public\".\"Invoice\".\"paidAt\" FROM \"public\".\"Invoice\" LEFT JOIN \"public\".\"Order\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Invoice\".\"orderId\") WHERE (\"j0\".\"userId\" = $1 AND (\"j0\".\"id\" IS NOT NULL)) ORDER BY \"public\".\"Invoice\".\"issuedAt\" DESC OFFSET $2"
+[00:00:24.342] Server  LOG     prisma:query "SELECT \"public\".\"Payment\".\"id\", \"public\".\"Payment\".\"userId\", \"public\".\"Payment\".\"invoiceId\", \"public\".\"Payment\".\"provider\", \"public\".\"Payment\".\"phoneNumber\", \"public\".\"Payment\".\"amount\", \"public\".\"Payment\".\"status\"::text, \"public\".\"Payment\".\"transactionId\", \"public\".\"Payment\".\"createdAt\" FROM \"public\".\"Payment\" WHERE \"public\".\"Payment\".\"invoiceId\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.366] Server  LOG     prisma:query "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"userId\", \"public\".\"Order\".\"policyId\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"sadNumber\", \"public\".\"Order\".\"hsCode\", \"public\".\"Order\".\"validationStatus\"::text, \"public\".\"Order\".\"gateOutStatus\"::text, \"public\".\"Order\".\"incoterm\", \"public\".\"Order\".\"cargoDescription\", \"public\".\"Order\".\"cargoNature\", \"public\".\"Order\".\"packagingMethod\", \"public\".\"Order\".\"totalWeight\", \"public\".\"Order\".\"originPort\", \"public\".\"Order\".\"destinationPort\", \"public\".\"Order\".\"transportMode\", \"public\".\"Order\".\"dispatchDate\", \"public\".\"Order\".\"transShipment\", \"public\".\"Order\".\"transShipmentNote\", \"public\".\"Order\".\"vesselName\", \"public\".\"Order\".\"carrierName\", \"public\".\"Order\".\"invoiceValue\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"valuationBasis\", \"public\".\"Order\".\"valuationBasisOther\", \"public\".\"Order\".\"sumInsured\", \"public\".\"Order\".\"proposerName\", \"public\".\"Order\".\"proposerCapacity\", \"public\".\"Order\".\"proposerCapacityOther\", \"public\".\"Order\".\"originCountry\", \"public\".\"Order\".\"destinationCountry\", \"public\".\"Order\".\"incotermOther\", \"public\".\"Order\".\"packagingMethodOther\", \"public\".\"Order\".\"weightUnit\", \"public\".\"Order\".\"storageRequired\", \"public\".\"Order\".\"storageLocation\", \"public\".\"Order\".\"storageDuration\", \"public\".\"Order\".\"claimsHistory\", \"public\".\"Order\".\"claimsDetails\", \"public\".\"Order\".\"coverType\", \"public\".\"Order\".\"additionalCovers\", \"public\".\"Order\".\"declarationDate\", \"public\".\"Order\".\"acceptTerms\", \"public\".\"Order\".\"createdAt\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.444] Server  LOG     prisma:query "SELECT \"public\".\"InsurancePolicy\".\"id\", \"public\".\"InsurancePolicy\".\"name\", \"public\".\"InsurancePolicy\".\"code\", \"public\".\"InsurancePolicy\".\"clauseType\", \"public\".\"InsurancePolicy\".\"description\", \"public\".\"InsurancePolicy\".\"isActive\", \"public\".\"InsurancePolicy\".\"cargoTypes\", \"public\".\"InsurancePolicy\".\"transportModes\", \"public\".\"InsurancePolicy\".\"incoterms\", \"public\".\"InsurancePolicy\".\"geoScope\", \"public\".\"InsurancePolicy\".\"originPorts\", \"public\".\"InsurancePolicy\".\"destinationPorts\", \"public\".\"InsurancePolicy\".\"valuationBasis\", \"public\".\"InsurancePolicy\".\"minSumInsured\", \"public\".\"InsurancePolicy\".\"maxSumInsured\", \"public\".\"InsurancePolicy\".\"currency\", \"public\".\"InsurancePolicy\".\"rate\", \"public\".\"InsurancePolicy\".\"minPremium\", \"public\".\"InsurancePolicy\".\"hazardLoading\", \"public\".\"InsurancePolicy\".\"discount\", \"public\".\"InsurancePolicy\".\"vat\", \"public\".\"InsurancePolicy\".\"additionalCovers\", \"public\".\"InsurancePolicy\".\"startDate\", \"public\".\"InsurancePolicy\".\"endDate\", \"public\".\"InsurancePolicy\".\"autoInvoice\", \"public\".\"InsurancePolicy\".\"autoIssue\", \"public\".\"InsurancePolicy\".\"requiresManualApproval\", \"public\".\"InsurancePolicy\".\"internalNotes\", \"public\".\"InsurancePolicy\".\"createdAt\" FROM \"public\".\"InsurancePolicy\" WHERE \"public\".\"InsurancePolicy\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.524] Server  LOG     prisma:query "SELECT \"public\".\"Invoice\".\"id\", \"public\".\"Invoice\".\"orderId\", \"public\".\"Invoice\".\"amount\", \"public\".\"Invoice\".\"status\"::text, \"public\".\"Invoice\".\"issuedAt\", \"public\".\"Invoice\".\"paidAt\" FROM \"public\".\"Invoice\" LEFT JOIN \"public\".\"Order\" AS \"j0\" ON (\"j0\".\"id\") = (\"public\".\"Invoice\".\"orderId\") WHERE (\"j0\".\"userId\" = $1 AND (\"j0\".\"id\" IS NOT NULL)) ORDER BY \"public\".\"Invoice\".\"issuedAt\" DESC OFFSET $2"
+[00:00:24.528] Server  LOG     prisma:query "SELECT \"public\".\"Invoice\".\"id\", \"public\".\"Invoice\".\"orderId\", \"public\".\"Invoice\".\"amount\", \"public\".\"Invoice\".\"status\"::text, \"public\".\"Invoice\".\"issuedAt\", \"public\".\"Invoice\".\"paidAt\" FROM \"public\".\"Invoice\" WHERE \"public\".\"Invoice\".\"orderId\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.610] Server  LOG     prisma:query "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"userId\", \"public\".\"Order\".\"policyId\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"sadNumber\", \"public\".\"Order\".\"hsCode\", \"public\".\"Order\".\"validationStatus\"::text, \"public\".\"Order\".\"gateOutStatus\"::text, \"public\".\"Order\".\"incoterm\", \"public\".\"Order\".\"cargoDescription\", \"public\".\"Order\".\"cargoNature\", \"public\".\"Order\".\"packagingMethod\", \"public\".\"Order\".\"totalWeight\", \"public\".\"Order\".\"originPort\", \"public\".\"Order\".\"destinationPort\", \"public\".\"Order\".\"transportMode\", \"public\".\"Order\".\"dispatchDate\", \"public\".\"Order\".\"transShipment\", \"public\".\"Order\".\"transShipmentNote\", \"public\".\"Order\".\"vesselName\", \"public\".\"Order\".\"carrierName\", \"public\".\"Order\".\"invoiceValue\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"valuationBasis\", \"public\".\"Order\".\"valuationBasisOther\", \"public\".\"Order\".\"sumInsured\", \"public\".\"Order\".\"proposerName\", \"public\".\"Order\".\"proposerCapacity\", \"public\".\"Order\".\"proposerCapacityOther\", \"public\".\"Order\".\"originCountry\", \"public\".\"Order\".\"destinationCountry\", \"public\".\"Order\".\"incotermOther\", \"public\".\"Order\".\"packagingMethodOther\", \"public\".\"Order\".\"weightUnit\", \"public\".\"Order\".\"storageRequired\", \"public\".\"Order\".\"storageLocation\", \"public\".\"Order\".\"storageDuration\", \"public\".\"Order\".\"claimsHistory\", \"public\".\"Order\".\"claimsDetails\", \"public\".\"Order\".\"coverType\", \"public\".\"Order\".\"additionalCovers\", \"public\".\"Order\".\"declarationDate\", \"public\".\"Order\".\"acceptTerms\", \"public\".\"Order\".\"createdAt\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.612] Server  LOG     prisma:query "SELECT \"public\".\"Payment\".\"id\", \"public\".\"Payment\".\"userId\", \"public\".\"Payment\".\"invoiceId\", \"public\".\"Payment\".\"provider\", \"public\".\"Payment\".\"phoneNumber\", \"public\".\"Payment\".\"amount\", \"public\".\"Payment\".\"status\"::text, \"public\".\"Payment\".\"transactionId\", \"public\".\"Payment\".\"createdAt\" FROM \"public\".\"Payment\" WHERE \"public\".\"Payment\".\"invoiceId\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.625] Server  LOG     prisma:query "SELECT \"public\".\"InsurancePolicy\".\"id\", \"public\".\"InsurancePolicy\".\"name\", \"public\".\"InsurancePolicy\".\"code\", \"public\".\"InsurancePolicy\".\"clauseType\", \"public\".\"InsurancePolicy\".\"description\", \"public\".\"InsurancePolicy\".\"isActive\", \"public\".\"InsurancePolicy\".\"cargoTypes\", \"public\".\"InsurancePolicy\".\"transportModes\", \"public\".\"InsurancePolicy\".\"incoterms\", \"public\".\"InsurancePolicy\".\"geoScope\", \"public\".\"InsurancePolicy\".\"originPorts\", \"public\".\"InsurancePolicy\".\"destinationPorts\", \"public\".\"InsurancePolicy\".\"valuationBasis\", \"public\".\"InsurancePolicy\".\"minSumInsured\", \"public\".\"InsurancePolicy\".\"maxSumInsured\", \"public\".\"InsurancePolicy\".\"currency\", \"public\".\"InsurancePolicy\".\"rate\", \"public\".\"InsurancePolicy\".\"minPremium\", \"public\".\"InsurancePolicy\".\"hazardLoading\", \"public\".\"InsurancePolicy\".\"discount\", \"public\".\"InsurancePolicy\".\"vat\", \"public\".\"InsurancePolicy\".\"additionalCovers\", \"public\".\"InsurancePolicy\".\"startDate\", \"public\".\"InsurancePolicy\".\"endDate\", \"public\".\"InsurancePolicy\".\"autoInvoice\", \"public\".\"InsurancePolicy\".\"autoIssue\", \"public\".\"InsurancePolicy\".\"requiresManualApproval\", \"public\".\"InsurancePolicy\".\"internalNotes\", \"public\".\"InsurancePolicy\".\"createdAt\" FROM \"public\".\"InsurancePolicy\" WHERE \"public\".\"InsurancePolicy\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.756] Server  LOG     prisma:query "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"userId\", \"public\".\"Order\".\"policyId\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"sadNumber\", \"public\".\"Order\".\"hsCode\", \"public\".\"Order\".\"validationStatus\"::text, \"public\".\"Order\".\"gateOutStatus\"::text, \"public\".\"Order\".\"incoterm\", \"public\".\"Order\".\"cargoDescription\", \"public\".\"Order\".\"cargoNature\", \"public\".\"Order\".\"packagingMethod\", \"public\".\"Order\".\"totalWeight\", \"public\".\"Order\".\"originPort\", \"public\".\"Order\".\"destinationPort\", \"public\".\"Order\".\"transportMode\", \"public\".\"Order\".\"dispatchDate\", \"public\".\"Order\".\"transShipment\", \"public\".\"Order\".\"transShipmentNote\", \"public\".\"Order\".\"vesselName\", \"public\".\"Order\".\"carrierName\", \"public\".\"Order\".\"invoiceValue\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"valuationBasis\", \"public\".\"Order\".\"valuationBasisOther\", \"public\".\"Order\".\"sumInsured\", \"public\".\"Order\".\"proposerName\", \"public\".\"Order\".\"proposerCapacity\", \"public\".\"Order\".\"proposerCapacityOther\", \"public\".\"Order\".\"originCountry\", \"public\".\"Order\".\"destinationCountry\", \"public\".\"Order\".\"incotermOther\", \"public\".\"Order\".\"packagingMethodOther\", \"public\".\"Order\".\"weightUnit\", \"public\".\"Order\".\"storageRequired\", \"public\".\"Order\".\"storageLocation\", \"public\".\"Order\".\"storageDuration\", \"public\".\"Order\".\"claimsHistory\", \"public\".\"Order\".\"claimsDetails\", \"public\".\"Order\".\"coverType\", \"public\".\"Order\".\"additionalCovers\", \"public\".\"Order\".\"declarationDate\", \"public\".\"Order\".\"acceptTerms\", \"public\".\"Order\".\"createdAt\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"userId\" = $1 ORDER BY \"public\".\"Order\".\"createdAt\" DESC OFFSET $2"
+[00:00:24.812] Server  LOG     prisma:query "SELECT \"public\".\"InsurancePolicy\".\"id\", \"public\".\"InsurancePolicy\".\"name\", \"public\".\"InsurancePolicy\".\"code\", \"public\".\"InsurancePolicy\".\"clauseType\", \"public\".\"InsurancePolicy\".\"description\", \"public\".\"InsurancePolicy\".\"isActive\", \"public\".\"InsurancePolicy\".\"cargoTypes\", \"public\".\"InsurancePolicy\".\"transportModes\", \"public\".\"InsurancePolicy\".\"incoterms\", \"public\".\"InsurancePolicy\".\"geoScope\", \"public\".\"InsurancePolicy\".\"originPorts\", \"public\".\"InsurancePolicy\".\"destinationPorts\", \"public\".\"InsurancePolicy\".\"valuationBasis\", \"public\".\"InsurancePolicy\".\"minSumInsured\", \"public\".\"InsurancePolicy\".\"maxSumInsured\", \"public\".\"InsurancePolicy\".\"currency\", \"public\".\"InsurancePolicy\".\"rate\", \"public\".\"InsurancePolicy\".\"minPremium\", \"public\".\"InsurancePolicy\".\"hazardLoading\", \"public\".\"InsurancePolicy\".\"discount\", \"public\".\"InsurancePolicy\".\"vat\", \"public\".\"InsurancePolicy\".\"additionalCovers\", \"public\".\"InsurancePolicy\".\"startDate\", \"public\".\"InsurancePolicy\".\"endDate\", \"public\".\"InsurancePolicy\".\"autoInvoice\", \"public\".\"InsurancePolicy\".\"autoIssue\", \"public\".\"InsurancePolicy\".\"requiresManualApproval\", \"public\".\"InsurancePolicy\".\"internalNotes\", \"public\".\"InsurancePolicy\".\"createdAt\" FROM \"public\".\"InsurancePolicy\" WHERE \"public\".\"InsurancePolicy\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:24.813] Server  LOG     prisma:query "SELECT \"public\".\"Invoice\".\"id\", \"public\".\"Invoice\".\"orderId\", \"public\".\"Invoice\".\"amount\", \"public\".\"Invoice\".\"status\"::text, \"public\".\"Invoice\".\"issuedAt\", \"public\".\"Invoice\".\"paidAt\" FROM \"public\".\"Invoice\" WHERE \"public\".\"Invoice\".\"orderId\" IN ($1,$2,$3) OFFSET $4"
+[00:00:25.098] Server  LOG     prisma:query "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"userId\", \"public\".\"Order\".\"policyId\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"sadNumber\", \"public\".\"Order\".\"hsCode\", \"public\".\"Order\".\"validationStatus\"::text, \"public\".\"Order\".\"gateOutStatus\"::text, \"public\".\"Order\".\"incoterm\", \"public\".\"Order\".\"cargoDescription\", \"public\".\"Order\".\"cargoNature\", \"public\".\"Order\".\"packagingMethod\", \"public\".\"Order\".\"totalWeight\", \"public\".\"Order\".\"originPort\", \"public\".\"Order\".\"destinationPort\", \"public\".\"Order\".\"transportMode\", \"public\".\"Order\".\"dispatchDate\", \"public\".\"Order\".\"transShipment\", \"public\".\"Order\".\"transShipmentNote\", \"public\".\"Order\".\"vesselName\", \"public\".\"Order\".\"carrierName\", \"public\".\"Order\".\"invoiceValue\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"valuationBasis\", \"public\".\"Order\".\"valuationBasisOther\", \"public\".\"Order\".\"sumInsured\", \"public\".\"Order\".\"proposerName\", \"public\".\"Order\".\"proposerCapacity\", \"public\".\"Order\".\"proposerCapacityOther\", \"public\".\"Order\".\"originCountry\", \"public\".\"Order\".\"destinationCountry\", \"public\".\"Order\".\"incotermOther\", \"public\".\"Order\".\"packagingMethodOther\", \"public\".\"Order\".\"weightUnit\", \"public\".\"Order\".\"storageRequired\", \"public\".\"Order\".\"storageLocation\", \"public\".\"Order\".\"storageDuration\", \"public\".\"Order\".\"claimsHistory\", \"public\".\"Order\".\"claimsDetails\", \"public\".\"Order\".\"coverType\", \"public\".\"Order\".\"additionalCovers\", \"public\".\"Order\".\"declarationDate\", \"public\".\"Order\".\"acceptTerms\", \"public\".\"Order\".\"createdAt\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"userId\" = $1 ORDER BY \"public\".\"Order\".\"createdAt\" DESC OFFSET $2"
+[00:00:25.111] Server  LOG     prisma:query "SELECT \"public\".\"Invoice\".\"id\", \"public\".\"Invoice\".\"orderId\", \"public\".\"Invoice\".\"amount\", \"public\".\"Invoice\".\"status\"::text, \"public\".\"Invoice\".\"issuedAt\", \"public\".\"Invoice\".\"paidAt\" FROM \"public\".\"Invoice\" WHERE \"public\".\"Invoice\".\"orderId\" IN ($1,$2,$3) OFFSET $4"
+[00:00:25.142] Server  LOG     prisma:query "SELECT \"public\".\"InsurancePolicy\".\"id\", \"public\".\"InsurancePolicy\".\"name\", \"public\".\"InsurancePolicy\".\"code\", \"public\".\"InsurancePolicy\".\"clauseType\", \"public\".\"InsurancePolicy\".\"description\", \"public\".\"InsurancePolicy\".\"isActive\", \"public\".\"InsurancePolicy\".\"cargoTypes\", \"public\".\"InsurancePolicy\".\"transportModes\", \"public\".\"InsurancePolicy\".\"incoterms\", \"public\".\"InsurancePolicy\".\"geoScope\", \"public\".\"InsurancePolicy\".\"originPorts\", \"public\".\"InsurancePolicy\".\"destinationPorts\", \"public\".\"InsurancePolicy\".\"valuationBasis\", \"public\".\"InsurancePolicy\".\"minSumInsured\", \"public\".\"InsurancePolicy\".\"maxSumInsured\", \"public\".\"InsurancePolicy\".\"currency\", \"public\".\"InsurancePolicy\".\"rate\", \"public\".\"InsurancePolicy\".\"minPremium\", \"public\".\"InsurancePolicy\".\"hazardLoading\", \"public\".\"InsurancePolicy\".\"discount\", \"public\".\"InsurancePolicy\".\"vat\", \"public\".\"InsurancePolicy\".\"additionalCovers\", \"public\".\"InsurancePolicy\".\"startDate\", \"public\".\"InsurancePolicy\".\"endDate\", \"public\".\"InsurancePolicy\".\"autoInvoice\", \"public\".\"InsurancePolicy\".\"autoIssue\", \"public\".\"InsurancePolicy\".\"requiresManualApproval\", \"public\".\"InsurancePolicy\".\"internalNotes\", \"public\".\"InsurancePolicy\".\"createdAt\" FROM \"public\".\"InsurancePolicy\" WHERE \"public\".\"InsurancePolicy\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:25.182] Server  LOG     prisma:query "SELECT \"public\".\"Order\".\"id\", \"public\".\"Order\".\"userId\", \"public\".\"Order\".\"policyId\", \"public\".\"Order\".\"status\"::text, \"public\".\"Order\".\"sadNumber\", \"public\".\"Order\".\"hsCode\", \"public\".\"Order\".\"validationStatus\"::text, \"public\".\"Order\".\"gateOutStatus\"::text, \"public\".\"Order\".\"incoterm\", \"public\".\"Order\".\"cargoDescription\", \"public\".\"Order\".\"cargoNature\", \"public\".\"Order\".\"packagingMethod\", \"public\".\"Order\".\"totalWeight\", \"public\".\"Order\".\"originPort\", \"public\".\"Order\".\"destinationPort\", \"public\".\"Order\".\"transportMode\", \"public\".\"Order\".\"dispatchDate\", \"public\".\"Order\".\"transShipment\", \"public\".\"Order\".\"transShipmentNote\", \"public\".\"Order\".\"vesselName\", \"public\".\"Order\".\"carrierName\", \"public\".\"Order\".\"invoiceValue\", \"public\".\"Order\".\"currency\", \"public\".\"Order\".\"valuationBasis\", \"public\".\"Order\".\"valuationBasisOther\", \"public\".\"Order\".\"sumInsured\", \"public\".\"Order\".\"proposerName\", \"public\".\"Order\".\"proposerCapacity\", \"public\".\"Order\".\"proposerCapacityOther\", \"public\".\"Order\".\"originCountry\", \"public\".\"Order\".\"destinationCountry\", \"public\".\"Order\".\"incotermOther\", \"public\".\"Order\".\"packagingMethodOther\", \"public\".\"Order\".\"weightUnit\", \"public\".\"Order\".\"storageRequired\", \"public\".\"Order\".\"storageLocation\", \"public\".\"Order\".\"storageDuration\", \"public\".\"Order\".\"claimsHistory\", \"public\".\"Order\".\"claimsDetails\", \"public\".\"Order\".\"coverType\", \"public\".\"Order\".\"additionalCovers\", \"public\".\"Order\".\"declarationDate\", \"public\".\"Order\".\"acceptTerms\", \"public\".\"Order\".\"createdAt\" FROM \"public\".\"Order\" WHERE \"public\".\"Order\".\"userId\" = $1 ORDER BY \"public\".\"Order\".\"createdAt\" DESC OFFSET $2"
+[00:00:25.188] Server  LOG     prisma:query "SELECT \"public\".\"InsurancePolicy\".\"id\", \"public\".\"InsurancePolicy\".\"name\", \"public\".\"InsurancePolicy\".\"code\", \"public\".\"InsurancePolicy\".\"clauseType\", \"public\".\"InsurancePolicy\".\"description\", \"public\".\"InsurancePolicy\".\"isActive\", \"public\".\"InsurancePolicy\".\"cargoTypes\", \"public\".\"InsurancePolicy\".\"transportModes\", \"public\".\"InsurancePolicy\".\"incoterms\", \"public\".\"InsurancePolicy\".\"geoScope\", \"public\".\"InsurancePolicy\".\"originPorts\", \"public\".\"InsurancePolicy\".\"destinationPorts\", \"public\".\"InsurancePolicy\".\"valuationBasis\", \"public\".\"InsurancePolicy\".\"minSumInsured\", \"public\".\"InsurancePolicy\".\"maxSumInsured\", \"public\".\"InsurancePolicy\".\"currency\", \"public\".\"InsurancePolicy\".\"rate\", \"public\".\"InsurancePolicy\".\"minPremium\", \"public\".\"InsurancePolicy\".\"hazardLoading\", \"public\".\"InsurancePolicy\".\"discount\", \"public\".\"InsurancePolicy\".\"vat\", \"public\".\"InsurancePolicy\".\"additionalCovers\", \"public\".\"InsurancePolicy\".\"startDate\", \"public\".\"InsurancePolicy\".\"endDate\", \"public\".\"InsurancePolicy\".\"autoInvoice\", \"public\".\"InsurancePolicy\".\"autoIssue\", \"public\".\"InsurancePolicy\".\"requiresManualApproval\", \"public\".\"InsurancePolicy\".\"internalNotes\", \"public\".\"InsurancePolicy\".\"createdAt\" FROM \"public\".\"InsurancePolicy\" WHERE \"public\".\"InsurancePolicy\".\"id\" IN ($1,$2,$3) OFFSET $4"
+[00:00:25.189] Server  LOG     prisma:query "SELECT \"public\".\"Invoice\".\"id\", \"public\".\"Invoice\".\"orderId\", \"public\".\"Invoice\".\"amount\", \"public\".\"Invoice\".\"status\"::text, \"public\".\"Invoice\".\"issuedAt\", \"public\".\"Invoice\".\"paidAt\" FROM \"public\".\"Invoice\" WHERE \"public\".\"Invoice\".\"orderId\" IN ($1,$2,$3) OFFSET $4"
