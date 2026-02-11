@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac/Desktop/ibrA/Solutions/TIIPS/apps/web/src/app/page.tsx"],"sourcesContent":["\"use client\";\n\nimport Navbar from \"@/components/landing/Navbar\";\nimport Hero from \"@/components/landing/Hero\";\nimport Faq from \"@/components/landing/Faq\";\nimport Footer from \"@/components/landing/Footer\";\n\nexport default function LandingPage() {\n  return (\n    <div className=\"min-h-screen bg-white\">\n      <Navbar />\n      <main>\n        <Hero />\n        <Faq />\n      </main>\n      <Footer />\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;AAAA;;;;;;AAOe,SAAS;IACtB,qBACE,oLAAC;QAAI,WAAU;;0BACb,mLAAC;0BACD,oLAAC;;kCACC,mLAAC;kCACD,mLAAC;;;0BAEH,mLAAC;;;AAGP"}}]
-}

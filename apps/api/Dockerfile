@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN corepack enable && npm install -g prisma@5.21.1
 RUN apt-get update && apt-get install -y openssl ca-certificates
 
 WORKDIR /app
@@ -16,6 +16,6 @@ RUN pnpm install --no-frozen-lockfile
 
 COPY . .
 
-RUN cd packages/db && pnpm prisma generate
+RUN cd packages/db && prisma generate
 
 CMD ["pnpm", "--filter", "@tiips/api", "dev"]

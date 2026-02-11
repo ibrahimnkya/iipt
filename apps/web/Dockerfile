@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+RUN corepack enable && npm install -g prisma@5.21.1
 
 FROM base AS deps
 WORKDIR /app
@@ -22,7 +22,7 @@ COPY --from=deps /app ./
 COPY . .
 
 # IMPORTANT: Prisma via pnpm
-RUN cd packages/db && pnpm prisma generate
+RUN cd packages/db && prisma generate
 
 RUN pnpm --filter @tiips/web build
 
