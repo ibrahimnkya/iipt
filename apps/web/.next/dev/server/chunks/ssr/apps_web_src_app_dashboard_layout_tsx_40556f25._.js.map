@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/mac/Desktop/ibrA/Solutions/TIIPS/apps/web/src/app/dashboard/layout.tsx"],"sourcesContent":["import { AppSidebar } from \"@/components/app-sidebar\";\nimport { SidebarInset, SidebarProvider, SidebarTrigger } from \"@/components/ui/sidebar\";\nimport { Separator } from \"@/components/ui/separator\";\nimport { ReactNode } from \"react\";\n\nexport default function DashboardLayout({ children }: { children: ReactNode }) {\n    return (\n        <SidebarProvider>\n            <AppSidebar />\n            <SidebarInset>\n                <div className=\"flex flex-1 flex-col gap-4 p-4 md:p-6 lg:p-8\">\n                    {children}\n                </div>\n            </SidebarInset>\n        </SidebarProvider>\n    );\n}\n"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;AAKe,SAAS,gBAAgB,EAAE,QAAQ,EAA2B;IACzE,qBACI,qOAAC;;0BACG,oOAAC;0BACD,oOAAC;0BACG,cAAA,oOAAC;oBAAI,WAAU;8BACV;;;;;AAKrB"}}]
+}

@@ -1,5 +1,4 @@
-import { prisma } from "@tiips/db";
-import { PaymentStatus } from "@prisma/client";
+import { prisma, PaymentStatus } from "@tiips/db";
 
 export class PaymentService {
     /**

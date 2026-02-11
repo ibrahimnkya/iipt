@@ -8,8 +8,8 @@
         "start": "node dist/index.js"
     },
     "dependencies": {
-        "@tiips/db": "*",
-        "@tiips/types": "*",
+        "@tiips/db": "workspace:*",
+        "@tiips/types": "workspace:*",
         "express": "^4.18.2",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",

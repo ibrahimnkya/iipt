@@ -1,5 +1,4 @@
 
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -9,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-tiips_db}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -19,22 +18,73 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  # API Service (Development Mode)
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: tiips-api
+    restart: always
+    # Run migrations before starting the dev server
+    command: sh -c "pnpm --filter @tiips/db push && pnpm --filter @tiips/api dev"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-tiips_db}?schema=public
+      PORT: 3001
+      NODE_ENV: development
+    ports:
+      - "3002:3001"
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/apps/api/node_modules
+      - /app/packages/db/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tiips-network
 
+  # Web Service (Development Mode)
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
     container_name: tiips-web
     restart: always
+    command: sh -c "pnpm --filter @tiips/web dev"
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-tiips_db}?schema=public
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-changeme}
+      NODE_ENV: development
+      HOSTNAME: "0.0.0.0"
     ports:
       - "3000:3000"
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - /app/apps/web/node_modules
+      - /app/packages/db/node_modules
+      - /app/apps/web/.next
     depends_on:
       postgres:
         condition: service_healthy
+      api:
+        condition: service_started
+    networks:
+      - tiips-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: tiips-nginx
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/iipt.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - web
+      - api
     networks:
       - tiips-network
 

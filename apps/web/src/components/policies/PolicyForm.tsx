@@ -55,7 +55,7 @@ export function PolicyForm({ initialData, isEditing = false }: PolicyFormProps) 
         currency: "USD",
         rate: 0,
         minPremium: 0,
-        hazardousLoading: 0,
+        hazardLoading: 0,
         discount: 0,
         vat: 18,
         additionalCovers: [] as { name: string; type: "Flat" | "Percentage"; amount: number }[],
@@ -75,8 +75,22 @@ export function PolicyForm({ initialData, isEditing = false }: PolicyFormProps) 
             const formattedData = {
                 ...defaultState,
                 ...initialData,
+                description: initialData.description || "",
+                internalNotes: initialData.internalNotes || "",
                 startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : "",
                 endDate: initialData.endDate ? new Date(initialData.endDate).toISOString().split('T')[0] : "",
+                minSumInsured: initialData.minSumInsured ?? 0,
+                maxSumInsured: initialData.maxSumInsured ?? 0,
+                minPremium: initialData.minPremium ?? 0,
+                hazardLoading: initialData.hazardLoading ?? 0,
+                discount: initialData.discount ?? 0,
+                vat: initialData.vat ?? 18,
+                cargoTypes: (initialData.cargoTypes as unknown as string[]) || [],
+                transportModes: (initialData.transportModes as unknown as string[]) || [],
+                incoterms: (initialData.incoterms as unknown as string[]) || [],
+                originPorts: (initialData.originPorts as unknown as string[]) || [],
+                destinationPorts: (initialData.destinationPorts as unknown as string[]) || [],
+                additionalCovers: (initialData.additionalCovers as unknown as { name: string; type: "Flat" | "Percentage"; amount: number }[]) || [],
             };
             setPolicyForm(formattedData);
         }
@@ -419,8 +433,8 @@ export function PolicyForm({ initialData, isEditing = false }: PolicyFormProps) 
                                     <input
                                         type="number"
                                         className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all"
-                                        value={policyForm.hazardousLoading}
-                                        onChange={(e) => setPolicyForm({ ...policyForm, hazardousLoading: Number(e.target.value) })}
+                                        value={policyForm.hazardLoading}
+                                        onChange={(e) => setPolicyForm({ ...policyForm, hazardLoading: Number(e.target.value) })}
                                     />
                                 </div>
                             </div>
@@ -631,7 +645,7 @@ export function PolicyForm({ initialData, isEditing = false }: PolicyFormProps) 
                             <h4 className="text-xs font-semibold text-amber-900 uppercase tracking-wider">Validation</h4>
                         </div>
                         <div className="space-y-2">
-                            {policyForm.cargoTypes.includes("Hazardous") && policyForm.hazardousLoading <= 0 && (
+                            {policyForm.cargoTypes.includes("Hazardous") && policyForm.hazardLoading <= 0 && (
                                 <p className="text-xs text-amber-900">• Hazardous cargo without loading defined</p>
                             )}
                             {policyForm.geoScope === "Worldwide" && policyForm.rate < 0.2 && (
