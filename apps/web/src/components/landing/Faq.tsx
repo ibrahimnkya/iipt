@@ -2,35 +2,35 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, PhoneCall, MessageCircle, Mail, HelpCircle } from "lucide-react";
+import { ChevronDown, PhoneCall, MessageCircle, Mail, HelpCircle, Clock } from "lucide-react";
 
 export default function Faq() {
     const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
     const faqs = [
         {
-            question: "What is TIIP and why do I need it?",
-            answer: "TIIP stands for Tanzania Import Insurance Portal. It is a government-compliant platform that makes it easy for importers to insure goods coming into Tanzania. According to local regulations, all imports must be insured by local insurance companies."
+            question: "What is IIPT and why do I need it?",
+            answer: "IIPT stands for Import Insurance Portal of Tanzania. It is a government-compliant platform that makes it easy for importers to insure goods coming into Tanzania. According to local regulations, all imports must be insured by local insurance companies to ensure proper protection and compliance."
         },
         {
             question: "Who can use this portal?",
-            answer: "TIIP is designed for anyone importing goods into Tanzania. Whether you are an individual importing personal items or a company importing commercial goods, the portal provides a simple and secure way to get insured."
+            answer: "IIPT is designed for anyone importing goods into Tanzania. Whether you are an individual importing personal items or a company importing commercial goods, the portal provides a simple, secure, and fast way to get comprehensive insurance coverage."
         },
         {
             question: "What types of goods can I insure?",
-            answer: "The portal allows you to insure a wide variety of goods, from small packages to large shipments. Common items include containers, vehicles, machinery, electronics, household goods, and raw materials."
+            answer: "The portal allows you to insure a wide variety of goods, from small packages to large shipments. Common items include shipping containers, vehicles, machinery, electronics, household goods, raw materials, and commercial products."
         },
         {
             question: "How do I make a payment?",
-            answer: "Once you've completed your insurance application and chosen an insurance provider, you can make your payment through the TIIP platform using secure payment channels like bank transfers and mobile money."
+            answer: "Once you've completed your insurance application and chosen an insurance provider, you can make your payment through the IIPT platform using secure payment channels including bank transfers, mobile money (M-Pesa, Tigo Pesa, Airtel Money), and credit/debit cards."
         },
         {
             question: "How long does it take to get my cover note?",
-            answer: "Your cover note is generated instantly once payment is confirmed. You'll receive it via email and can download it directly from your dashboard within minutes."
+            answer: "Your cover note is generated instantly once payment is confirmed. You'll receive it via email and can download it directly from your dashboard within minutes. The entire process typically takes less than 5 minutes from start to finish."
         },
         {
             question: "Is my data secure on this platform?",
-            answer: "Yes, absolutely. We use bank-level encryption and comply with all Tanzania data protection regulations. Your information is stored securely and never shared with third parties without your consent."
+            answer: "Yes, absolutely. We use bank-level 256-bit encryption and comply with all Tanzania data protection regulations. Your information is stored securely in encrypted databases and never shared with third parties without your explicit consent. We are regularly audited for security compliance."
         }
     ];
 
@@ -38,7 +38,7 @@ export default function Faq() {
         {
             icon: PhoneCall,
             label: "Phone Support",
-            description: "Mon-Fri from 8am to 5pm",
+            description: "Mon-Fri, 8am - 5pm EAT",
             action: "Call us now",
             href: "tel:+255000000000",
             color: "blue"
@@ -46,48 +46,50 @@ export default function Faq() {
         {
             icon: MessageCircle,
             label: "Live Chat",
-            description: "Get instant answers",
-            action: "Start chat",
+            description: "Instant responses",
+            action: "Start chatting",
             href: "#chat",
             color: "green"
         },
         {
             icon: Mail,
             label: "Email Us",
-            description: "We'll respond in 24hrs",
+            description: "Response within 24hrs",
             action: "Send email",
-            href: "mailto:support@tiip.go.tz",
+            href: "mailto:support@iipt.go.tz",
             color: "purple"
         }
     ];
 
     return (
-        <section id="faq" className="py-20 lg:py-28 bg-gradient-to-b from-white via-gray-50/50 to-white relative overflow-hidden">
+        <section id="faq" className="py-24 lg:py-32 bg-gradient-to-b from-white via-gray-50 to-white relative overflow-hidden">
             {/* Background Pattern */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(59,130,246,0.03),transparent_50%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(34,197,94,0.03),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(59,130,246,0.05),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_70%,rgba(34,197,94,0.05),transparent_50%)]" />
             
             <div className="container mx-auto px-6 lg:px-8 relative z-10">
                 <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
                     {/* Left Column - Header & Contact */}
-                    <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-8 lg:self-start">
+                    <div className="lg:col-span-5 space-y-8 lg:sticky lg:top-24 lg:self-start">
                         {/* Section Header */}
-                        <div className="space-y-4">
-                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-100">
-                                <HelpCircle className="w-4 h-4 text-blue-600" />
-                                <span className="text-sm font-semibold text-blue-700">
-                                    FAQ
+                        <div className="space-y-5">
+                            <div className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-blue-50 to-green-50 rounded-full border border-blue-200">
+                                <HelpCircle className="w-4 h-4 text-blue-600" strokeWidth={2.5} />
+                                <span className="text-sm font-bold text-blue-700 uppercase tracking-wide">
+                                    Frequently Asked Questions
                                 </span>
                             </div>
                             
-                            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
+                            <h2 className="text-4xl sm:text-5xl font-black text-gray-900 leading-tight">
                                 Got questions?
                                 <br />
-                                We've got answers
+                                <span className="bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                                    We've got answers
+                                </span>
                             </h2>
                             
                             <p className="text-lg text-gray-600 leading-relaxed">
-                                Everything you need to know about the product and how it works. Can't find what you're looking for? Reach out to our team.
+                                Everything you need to know about IIPT and how it works. Can't find what you're looking for? Our support team is here to help.
                             </p>
                         </div>
 
@@ -95,30 +97,50 @@ export default function Faq() {
                         <div className="space-y-4 pt-4">
                             {contactOptions.map((option, idx) => {
                                 const Icon = option.icon;
-                                const colorClasses = {
-                                    blue: "bg-blue-50 border-blue-100 text-blue-600 hover:border-blue-200 hover:bg-blue-100",
-                                    green: "bg-green-50 border-green-100 text-green-600 hover:border-green-200 hover:bg-green-100",
-                                    purple: "bg-purple-50 border-purple-100 text-purple-600 hover:border-purple-200 hover:bg-purple-100"
+                                const colorMap = {
+                                    blue: {
+                                        bg: "bg-blue-50",
+                                        border: "border-blue-200",
+                                        text: "text-blue-600",
+                                        iconBg: "bg-blue-100",
+                                        hover: "hover:border-blue-300 hover:bg-blue-100/50"
+                                    },
+                                    green: {
+                                        bg: "bg-green-50",
+                                        border: "border-green-200",
+                                        text: "text-green-600",
+                                        iconBg: "bg-green-100",
+                                        hover: "hover:border-green-300 hover:bg-green-100/50"
+                                    },
+                                    purple: {
+                                        bg: "bg-purple-50",
+                                        border: "border-purple-200",
+                                        text: "text-purple-600",
+                                        iconBg: "bg-purple-100",
+                                        hover: "hover:border-purple-300 hover:bg-purple-100/50"
+                                    }
                                 };
+                                
+                                const colors = colorMap[option.color as keyof typeof colorMap];
 
                                 return (
                                     <Link 
                                         key={idx}
                                         href={option.href}
-                                        className={`group block bg-white rounded-2xl border-2 p-6 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 ${colorClasses[option.color as keyof typeof colorClasses].split(' ').slice(1, 3).join(' ')}`}
+                                        className={`group block bg-white rounded-2xl border-2 ${colors.border} p-6 transition-all duration-200 hover:shadow-xl ${colors.hover} hover:-translate-y-1`}
                                     >
                                         <div className="flex items-start gap-4">
-                                            <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${colorClasses[option.color as keyof typeof colorClasses].split(' ')[0]}`}>
-                                                <Icon className={`w-6 h-6 ${colorClasses[option.color as keyof typeof colorClasses].split(' ')[2]}`} />
+                                            <div className={`flex-shrink-0 w-14 h-14 ${colors.iconBg} rounded-xl flex items-center justify-center transition-transform group-hover:scale-110`}>
+                                                <Icon className={`w-7 h-7 ${colors.text}`} strokeWidth={2.5} />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-gray-900 mb-1">
+                                                <h3 className="font-bold text-gray-900 mb-1 text-lg">
                                                     {option.label}
                                                 </h3>
-                                                <p className="text-sm text-gray-500 mb-2">
+                                                <p className="text-sm text-gray-500 mb-3">
                                                     {option.description}
                                                 </p>
-                                                <span className={`inline-flex items-center text-sm font-medium ${colorClasses[option.color as keyof typeof colorClasses].split(' ')[2]} group-hover:underline`}>
+                                                <span className={`inline-flex items-center text-sm font-bold ${colors.text} group-hover:underline`}>
                                                     {option.action}
                                                     <ChevronDown className="w-4 h-4 ml-1 -rotate-90 group-hover:translate-x-1 transition-transform" />
                                                 </span>
@@ -129,72 +151,78 @@ export default function Faq() {
                             })}
                         </div>
 
-                        {/* Additional Help */}
-                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
-                            <p className="text-sm text-gray-600 mb-3">
-                                <strong className="text-gray-900">Still need help?</strong>
-                                <br />
-                                Our support team is available Monday to Friday, 8am to 5pm EAT.
-                            </p>
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                <span>Average response time: 2 hours</span>
+                        {/* Additional Help Box */}
+                        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-7 border border-gray-700 shadow-xl">
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <Clock className="w-6 h-6 text-white" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-bold text-lg mb-2">Need immediate help?</h3>
+                                    <p className="text-gray-300 text-sm mb-4 leading-relaxed">
+                                        Our support team is available Monday to Friday, 8:00 AM to 5:00 PM (East Africa Time).
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+                                        <span className="text-sm font-semibold text-gray-300">Average response time: 2 hours</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Right Column - FAQ Accordion */}
                     <div className="lg:col-span-7">
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {faqs.map((faq, idx) => {
                                 const isActive = activeFaq === idx;
                                 
                                 return (
                                     <div 
                                         key={idx} 
-                                        className={`bg-white rounded-2xl border-2 transition-all duration-200 ${
+                                        className={`bg-white rounded-2xl border-2 transition-all duration-300 ${
                                             isActive 
-                                                ? 'border-brand-blue shadow-lg shadow-blue-100' 
-                                                : 'border-gray-100 hover:border-gray-200 hover:shadow-md'
+                                                ? 'border-blue-500 shadow-xl shadow-blue-100' 
+                                                : 'border-gray-200 hover:border-gray-300 hover:shadow-lg'
                                         }`}
                                     >
                                         <button
                                             onClick={() => setActiveFaq(isActive ? null : idx)}
-                                            className="w-full flex items-start gap-4 p-6 text-left group"
+                                            className="w-full flex items-start gap-4 p-7 text-left group"
                                         >
-                                            <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                                            <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200 ${
                                                 isActive 
-                                                    ? 'bg-brand-blue text-white' 
-                                                    : 'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
+                                                    ? 'bg-gradient-to-br from-blue-600 to-green-600 text-white shadow-lg' 
+                                                    : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
                                             }`}>
-                                                <span className="text-sm font-bold">{idx + 1}</span>
+                                                {idx + 1}
                                             </div>
                                             
                                             <div className="flex-1 min-w-0">
-                                                <h3 className={`text-lg font-semibold transition-colors ${
+                                                <h3 className={`text-lg font-bold transition-colors ${
                                                     isActive 
-                                                        ? 'text-brand-blue' 
-                                                        : 'text-gray-900 group-hover:text-brand-blue'
+                                                        ? 'text-blue-600' 
+                                                        : 'text-gray-900 group-hover:text-blue-600'
                                                 }`}>
                                                     {faq.question}
                                                 </h3>
                                             </div>
 
-                                            <div className={`flex-shrink-0 w-6 h-6 flex items-center justify-center transition-transform duration-200 ${
+                                            <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center transition-transform duration-200 ${
                                                 isActive ? 'rotate-180' : ''
                                             }`}>
-                                                <ChevronDown className={`w-5 h-5 transition-colors ${
-                                                    isActive ? 'text-brand-blue' : 'text-gray-400'
-                                                }`} />
+                                                <ChevronDown className={`w-6 h-6 transition-colors ${
+                                                    isActive ? 'text-blue-600' : 'text-gray-400'
+                                                }`} strokeWidth={2.5} />
                                             </div>
                                         </button>
                                         
                                         <div className={`overflow-hidden transition-all duration-300 ${
                                             isActive ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                                         }`}>
-                                            <div className="px-6 pb-6 pt-2">
-                                                <div className="pl-12">
-                                                    <div className="border-l-2 border-blue-100 pl-6 py-2">
+                                            <div className="px-7 pb-7">
+                                                <div className="pl-14">
+                                                    <div className="border-l-4 border-blue-200 pl-6 py-1">
                                                         <p className="text-gray-600 leading-relaxed">
                                                             {faq.answer}
                                                         </p>
@@ -207,20 +235,20 @@ export default function Faq() {
                             })}
                         </div>
 
-                        {/* Footer CTA */}
-                        <div className="mt-8 text-center p-8 bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl border border-gray-100">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        {/* Bottom CTA */}
+                        <div className="mt-10 text-center p-10 bg-gradient-to-r from-blue-50 via-white to-green-50 rounded-3xl border-2 border-gray-200 shadow-lg">
+                            <h3 className="text-2xl font-black text-gray-900 mb-3">
                                 Still have questions?
                             </h3>
-                            <p className="text-gray-600 mb-4">
-                                Can't find the answer you're looking for? Please reach out to our friendly team.
+                            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                                Can't find the answer you're looking for? Our friendly support team is ready to assist you.
                             </p>
                             <Link 
                                 href="/contact" 
-                                className="inline-flex items-center justify-center px-6 py-3 bg-brand-blue text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+                                className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-green-600 text-white font-bold text-lg rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all hover:-translate-y-1"
                             >
                                 Contact Support
-                                <ChevronDown className="w-4 h-4 ml-2 -rotate-90" />
+                                <ChevronDown className="w-5 h-5 ml-2 -rotate-90" strokeWidth={3} />
                             </Link>
                         </div>
                     </div>
