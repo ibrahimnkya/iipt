@@ -13,6 +13,7 @@ model User {
   id               String    @id @default(uuid())
   role             Role      @default(USER)
   fullName         String
+  companyName      String?
   email            String    @unique
   password         String
   phone            String
@@ -22,9 +23,12 @@ model User {
   tinNumber        String?
   natureOfBusiness String?
   signature        String?
-  createdAt        DateTime  @default(now())
+  status           UserStatus @default(APPROVED)
+  logoUrl          String?
+  createdAt        DateTime   @default(now())
   orders           Order[]
   payments         Payment[]
+  policies         InsurancePolicy[]
 }
 
 model InsurancePolicy {
@@ -56,8 +60,10 @@ model InsurancePolicy {
   autoIssue              Boolean   @default(true)
   requiresManualApproval Boolean   @default(false)
   internalNotes          String?
+  insurerId              String?
   createdAt              DateTime  @default(now())
   orders                 Order[]
+  insurer                User?     @relation(fields: [insurerId], references: [id])
 }
 
 model Order {
@@ -131,6 +137,7 @@ model Payment {
   status        PaymentStatus
   transactionId String?
   createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   invoice       Invoice       @relation(fields: [invoiceId], references: [id])
   user          User          @relation(fields: [userId], references: [id])
 }
@@ -155,6 +162,13 @@ model HSCode {
 enum Role {
   ADMIN
   USER
+  INSURER
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum OrderStatus {

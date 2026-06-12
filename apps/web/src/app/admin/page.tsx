@@ -8,7 +8,7 @@ import {
     Ship,
     Plane,
     Truck,
-    DollarSign,
+    Wallet,
     TrendingUp,
     TrendingDown,
     Package,
@@ -60,6 +60,7 @@ export default function AdminDashboardPage() {
         monthlyRevenue: [],
     });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [timeframe, setTimeframe] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
     useEffect(() => {
@@ -77,6 +78,8 @@ export default function AdminDashboardPage() {
     }, [session]);
 
     const fetchStats = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const res = await fetch("/api/admin/reports");
             if (res.ok) {
@@ -94,10 +97,12 @@ export default function AdminDashboardPage() {
                     monthlyRevenue: data.monthlyRevenue || [],
                 });
             } else {
-                console.error("Failed to fetch dashboard stats");
+                console.warn("Failed to fetch dashboard stats from /api/admin/reports");
+                setError("Failed to load live statistics from the remote REST API.");
             }
-        } catch (error) {
-            console.error("Error fetching dashboard stats:", error);
+        } catch (err) {
+            console.warn("Error fetching dashboard stats:", err);
+            setError("Could not connect to the statistics API. Please verify your internet or remote server status.");
         } finally {
             setLoading(false);
         }
@@ -155,10 +160,10 @@ export default function AdminDashboardPage() {
     const kpiCards = [
         {
             title: "Total Revenue",
-            value: `TZS ${(stats.totalPremiumPaid / 1000000).toFixed(1)}M`,
+            value: `Tsh ${(stats.totalPremiumPaid / 1000000).toFixed(1)}M`,
             change: "+18.4%",
             positive: true,
-            icon: DollarSign,
+            icon: Wallet,
             color: "blue"
         },
         {
@@ -218,8 +223,8 @@ export default function AdminDashboardPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="min-h-screen bg-transparent">
+            <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -244,15 +249,36 @@ export default function AdminDashboardPage() {
                         </div>
                     </div>
 
-                    {/* Quick Access Links */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        {quickAccessLinks.map((link, index) => {
-                            const Icon = link.icon;
-                            return (
-                                <Link
-                                    key={index}
-                                    href={link.href}
-                                    className="group relative overflow-hidden rounded-lg bg-gradient-to-br p-5 shadow-sm hover:shadow-md transition-all"
+                {/* Error Banner */}
+                {error && (
+                    <div className="mb-8 p-4 bg-red-50/80 backdrop-blur border border-red-200 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <AlertCircle className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-semibold text-red-900">API Connection Issue</p>
+                                <p className="text-xs text-red-600">{error}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={fetchStats}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm active:scale-95"
+                        >
+                            Retry Connection
+                        </button>
+                    </div>
+                )}
+
+                {/* Quick Access Links */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    {quickAccessLinks.map((link, index) => {
+                        const Icon = link.icon;
+                        return (
+                            <Link
+                                key={index}
+                                href={link.href}
+                                className="group relative overflow-hidden rounded-lg bg-gradient-to-br p-5 shadow-sm hover:shadow-md transition-all"
                                 >
                                     <div
                                         className={cn(
@@ -419,8 +445,8 @@ export default function AdminDashboardPage() {
                                     {/* Summary */}
                                     <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
                                         {[
-                                            { label: "Avg Monthly", value: `TZS ${Math.round(stats.totalPremiumPaid / 12 / 1000000)}M`, trend: "↑ 12.5%" },
-                                            { label: "Total YTD", value: `TZS ${Math.round(stats.totalPremiumPaid / 1000000)}M`, trend: "↑ 18.3%" },
+                                            { label: "Avg Monthly", value: `Tsh ${Math.round(stats.totalPremiumPaid / 12 / 1000000)}M`, trend: "↑ 12.5%" },
+                                            { label: "Total YTD", value: `Tsh ${Math.round(stats.totalPremiumPaid / 1000000)}M`, trend: "↑ 18.3%" },
                                             { label: "Loss Ratio", value: "28.5%", trend: "↓ 3.2%" },
                                         ].map((stat, i) => (
                                             <div key={i} className="text-center p-4 rounded-lg bg-gray-50">

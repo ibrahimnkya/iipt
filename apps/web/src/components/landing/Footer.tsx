@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "./Link";
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, Shield } from "lucide-react";
 
 export default function Footer() {
@@ -33,28 +33,26 @@ export default function Footer() {
                         {/* Brand & Description */}
                         <div className="lg:col-span-4 space-y-6">
                             <Link href="/" className="inline-flex items-center gap-3 group">
-                                <div className="w-12 h-12 bg-gradient-to-br from-brand-green to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <Shield className="w-7 h-7 text-white" />
-                                </div>
-                                <span className="text-2xl font-black text-white">IIPT</span>
+                                <img src="/logo.svg" alt="NIIS-T Logo" className="w-11 h-11 object-contain transition-transform group-hover:scale-105" />
+                                <span className="text-2xl font-black text-white tracking-tight">NIIS-T</span>
                             </Link>
                             <p className="text-sm text-gray-400 leading-relaxed max-w-sm">
-                                Import Insurance Portal of Tanzania - Your trusted partner for compliant import insurance coverage. Get protected in minutes.
+                                National Import Insurance System – Tanzania (NIIS-T) - Your trusted partner for legally compliant marine cargo insurance coverage.
                             </p>
                             
                             {/* Contact */}
                             <div className="space-y-3">
-                                <a href="tel:+255000000000" className="flex items-center gap-3 text-sm text-gray-400 hover:text-white transition-colors group">
+                                <a href="tel:+2552220000" className="flex items-center gap-3 text-sm text-gray-400 hover:text-white transition-colors group" suppressHydrationWarning>
                                     <div className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center group-hover:bg-brand-green transition-colors">
                                         <Phone className="w-4 h-4" />
                                     </div>
-                                    <span>+255 000 000 000</span>
+                                    <span>+255 22 220 000</span>
                                 </a>
-                                <a href="mailto:info@iipt.go.tz" className="flex items-center gap-3 text-sm text-gray-400 hover:text-white transition-colors group">
+                                <a href="mailto:support@niip.co.tz" className="flex items-center gap-3 text-sm text-gray-400 hover:text-white transition-colors group" suppressHydrationWarning>
                                     <div className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center group-hover:bg-brand-green transition-colors">
                                         <Mail className="w-4 h-4" />
                                     </div>
-                                    <span>info@iipt.go.tz</span>
+                                    <span>support@niip.co.tz</span>
                                 </a>
                             </div>
                         </div>
@@ -115,7 +113,7 @@ export default function Footer() {
                 {/* Bottom Bar */}
                 <div className="border-t border-white/10 py-6">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-                        <p>
+                        <p suppressHydrationWarning>
                             © {new Date().getFullYear()} Import Insurance Portal of Tanzania. All rights reserved.
                         </p>
                         <div className="flex items-center gap-6">

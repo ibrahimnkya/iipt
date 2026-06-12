@@ -82,12 +82,10 @@ export default function InvoicePrintPage() {
             {/* Header */}
             <div className="flex justify-between items-start mb-12">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-black text-white flex items-center justify-center rounded-lg font-black text-2xl">
-                        T
-                    </div>
+                    <img src="/logo.svg" alt="NIIS-T Logo" className="w-12 h-12 object-contain" />
                     <div>
-                        <h1 className="text-xl font-black text-gray-900 leading-none">TIIPS</h1>
-                        <p className="text-xs text-gray-500 font-medium">Tanzania Import Insurance Portal</p>
+                        <h1 className="text-xl font-black text-gray-900 leading-none">NIIS-T</h1>
+                        <p className="text-xs text-gray-500 font-medium">National Import Insurance System – Tanzania</p>
                     </div>
                 </div>
                 <div className="text-right">
@@ -171,7 +169,7 @@ export default function InvoicePrintPage() {
             {/* Footer */}
             <div className="border-t border-gray-100 pt-8 text-center text-sm text-gray-500">
                 <p>Thank you for your business.</p>
-                <p className="mt-1">Tanzania Import Insurance Portal (TIIPS) &copy; {new Date().getFullYear()}</p>
+                <p className="mt-1">National Import Insurance System – Tanzania (NIIS-T) &copy; {new Date().getFullYear()}</p>
             </div>
 
             <style jsx global>{`

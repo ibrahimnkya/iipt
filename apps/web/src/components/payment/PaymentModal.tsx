@@ -36,6 +36,7 @@ export function PaymentModal({ isOpen, onClose, invoice, onSuccess }: PaymentMod
     const [loadingChannels, setLoadingChannels] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successPaymentData, setSuccessPaymentData] = useState<any>(null);
+    const [pollCount, setPollCount] = useState(0);
 
     // Fetch channels on mount
     useEffect(() => {
@@ -64,31 +65,64 @@ export function PaymentModal({ isOpen, onClose, invoice, onSuccess }: PaymentMod
     // Polling Effect
     useEffect(() => {
         let interval: NodeJS.Timeout;
+        let count = 0;
+        const MAX_POLLS = 60; // 3 minutes
 
         if (step === "PROCESSING" && currentPaymentId) {
+            console.log(`🔄 Starting payment status polling for: ${currentPaymentId}`);
+            
             interval = setInterval(async () => {
+                count++;
+                setPollCount(count);
+                
+                console.log(`📡 Poll attempt ${count}/${MAX_POLLS} for payment: ${currentPaymentId}`);
+                
+                if (count >= MAX_POLLS) {
+                    clearInterval(interval);
+                    console.log(`⏱️ Payment polling timeout after ${count} attempts`);
+                    setError("Payment verification timeout. Please contact support if money was deducted.");
+                    setStep("DETAILS");
+                    return;
+                }
+
                 try {
                     const res = await fetch(`/api/payments/status/${currentPaymentId}`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.status === "SUCCESS") {
-                            setSuccessPaymentData(data); // Save full payment data
-                            setStep("SUCCESS");
-                            onSuccess();
-                            clearInterval(interval);
-                        } else if (data.status === "FAILED") {
-                            setError("Payment failed or was rejected.");
-                            // Optional: setStep("DETAILS") to retry
-                            clearInterval(interval);
-                        }
+                    
+                    if (!res.ok) {
+                        console.error(`❌ Poll failed with status: ${res.status}`);
+                        return; // Continue polling
                     }
+                    
+                    const data = await res.json();
+                    console.log(`📊 Payment status:`, data);
+                    
+                    if (data.status === "SUCCESS") {
+                        console.log(`✅ Payment successful! Invoice: ${data.invoice?.id}`);
+                        setSuccessPaymentData(data);
+                        setStep("SUCCESS");
+                        onSuccess();
+                        clearInterval(interval);
+                    } else if (data.status === "FAILED") {
+                        console.log(`❌ Payment failed for: ${currentPaymentId}`);
+                        setError("Payment failed or was rejected. Please try again.");
+                        setStep("DETAILS");
+                        clearInterval(interval);
+                    }
+                    // If PENDING, continue polling
+                    
                 } catch (error) {
-                    console.error("Polling error:", error);
+                    console.error("💥 Polling error:", error);
+                    // Continue polling despite errors
                 }
-            }, 3000); // Poll every 3 seconds
+            }, 3000);
         }
 
-        return () => clearInterval(interval);
+        return () => {
+            if (interval) {
+                console.log(`🛑 Stopping payment polling`);
+                clearInterval(interval);
+            }
+        };
     }, [step, currentPaymentId, onSuccess]);
 
     const handleProviderSelect = (providerId: string) => {

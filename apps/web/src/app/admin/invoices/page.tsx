@@ -19,7 +19,7 @@ import {
     LayoutGrid,
     List,
     Receipt,
-    DollarSign,
+    Wallet,
     TrendingUp,
     Users,
     ArrowUpRight
@@ -176,7 +176,7 @@ export default function AdminInvoicesPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -243,12 +243,12 @@ export default function AdminInvoicesPage() {
                         <div className="bg-white rounded-lg p-4 border border-gray-200 col-span-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                                    <Wallet className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Total Revenue</p>
                                     <p className="text-xl font-bold text-emerald-900">
-                                        {(stats.totalRevenue / 1000000).toFixed(2)}M
+                                        Tsh {(stats.totalRevenue / 1000000).toFixed(2)}M
                                     </p>
                                 </div>
                             </div>
@@ -416,7 +416,7 @@ export default function AdminInvoicesPage() {
                                                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
                                                     <p className="text-xs text-gray-500 font-medium mb-1">Amount</p>
                                                     <p className="text-2xl font-bold text-gray-900">
-                                                        {invoice.order.currency} {invoice.amount.toLocaleString()}
+                                                        Tsh {invoice.amount.toLocaleString()}
                                                     </p>
                                                 </div>
 
@@ -528,7 +528,7 @@ export default function AdminInvoicesPage() {
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <span className="font-semibold text-gray-900 text-sm">
-                                                                {invoice.order.currency} {invoice.amount.toLocaleString()}
+                                                                Tsh {invoice.amount.toLocaleString()}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4">

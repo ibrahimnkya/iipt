@@ -1,5 +1,3 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import QRCode from "qrcode";
 
 // Define interfaces based on Prisma schema (simplified for frontend use)
@@ -26,6 +24,16 @@ interface Order {
     policy?: {
         name: string;
         code: string;
+        insurer?: {
+            id: string;
+            fullName: string;
+            companyName: string | null;
+            logoUrl: string | null;
+            email: string;
+            phone: string;
+            physicalAddress: string | null;
+            postalAddress: string | null;
+        } | null;
     };
 }
 
@@ -51,12 +59,12 @@ interface Payment {
 
 export class PdfGenerator {
     private static COMPANY_INFO = {
-        name: "TIIPS - Tanzania Import Insurance Portal",
+        name: "NIIS-T - National Import Insurance System – Tanzania",
         orginalName: "FrontLenders",
         address: "Dar es Salaam, Tanzania",
         phone: "+255 772 193 600",
-        email: "support@tiips.co.tz",
-        website: "https://tiips.co.tz"
+        email: "support@niip.co.tz",
+        website: "https://niip.co.tz"
     };
 
     private static formatDate(date: string | Date): string {
@@ -69,14 +77,27 @@ export class PdfGenerator {
         return new Intl.NumberFormat('en-TZ', { style: 'currency', currency: currency }).format(amount);
     }
 
-    private static addHeader(doc: jsPDF, title: string) {
+    private static async getJsPDF() {
+        const jsPDF = (await import("jspdf")).default;
+        const autoTable = (await import("jspdf-autotable")).default;
+        return { jsPDF, autoTable };
+    }
+
+    private static addHeader(doc: any, title: string, companyInfo?: any) {
         const pageWidth = doc.internal.pageSize.width;
+
+        // Default Company Info
+        const info = companyInfo || this.COMPANY_INFO;
 
         // Logo Placeholder (Using Text for now)
         doc.setFontSize(22);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(46, 125, 50); // Brand Green
-        doc.text(this.COMPANY_INFO.orginalName, 14, 20);
+        if (info.companyName) {
+            doc.text(info.companyName, 14, 20);
+        } else {
+            doc.text(this.COMPANY_INFO.orginalName, 14, 20);
+        }
 
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
@@ -85,10 +106,16 @@ export class PdfGenerator {
 
         // Company Details (Right Aligned)
         doc.setFontSize(9);
-        doc.text(this.COMPANY_INFO.address, pageWidth - 14, 15, { align: "right" });
-        doc.text(this.COMPANY_INFO.phone, pageWidth - 14, 20, { align: "right" });
-        doc.text(this.COMPANY_INFO.email, pageWidth - 14, 25, { align: "right" });
-        doc.text(this.COMPANY_INFO.website, pageWidth - 14, 30, { align: "right" });
+        const address = info.physicalAddress || info.address || this.COMPANY_INFO.address;
+        const phone = info.phone || this.COMPANY_INFO.phone;
+        const email = info.email || this.COMPANY_INFO.email;
+        // Website might not be available on insurer object, fallback to default or omit
+        const website = this.COMPANY_INFO.website;
+
+        doc.text(address, pageWidth - 14, 15, { align: "right" });
+        doc.text(phone, pageWidth - 14, 20, { align: "right" });
+        doc.text(email, pageWidth - 14, 25, { align: "right" });
+        doc.text(website, pageWidth - 14, 30, { align: "right" });
 
         // Line Divider
         doc.setDrawColor(200);
@@ -101,7 +128,7 @@ export class PdfGenerator {
         doc.text(title.toUpperCase(), 14, 50);
     }
 
-    private static addFooter(doc: jsPDF) {
+    private static addFooter(doc: any) {
         const pageCount = doc.getNumberOfPages();
         const pageWidth = doc.internal.pageSize.width;
         const pageHeight = doc.internal.pageSize.height;
@@ -110,11 +137,17 @@ export class PdfGenerator {
             doc.setPage(i);
             doc.setFontSize(8);
             doc.setTextColor(150);
+
+            // Powered by NIIS-T
+            doc.text("Powered by NIIS-T", 14, pageHeight - 10);
+
             doc.text(
                 `Generated on ${new Date().toLocaleString()}`,
-                14,
-                pageHeight - 10
+                pageWidth / 2, // Center align roughly
+                pageHeight - 10,
+                { align: "center" }
             );
+
             doc.text(
                 `Page ${i} of ${pageCount}`,
                 pageWidth - 14,
@@ -148,6 +181,7 @@ export class PdfGenerator {
      * Generate Payment Receipt
      */
     static async generateReceipt(invoice: Invoice, payment: Payment) {
+        const { jsPDF, autoTable } = await this.getJsPDF();
         const doc = new jsPDF();
         this.addHeader(doc, "Payment Receipt");
 
@@ -155,7 +189,7 @@ export class PdfGenerator {
         const pageWidth = doc.internal.pageSize.width;
 
         // Add QR Code
-        const qrCodeData = await this.generateQRCode(`https://tiips.co.tz/verify/receipt/${payment.id}`);
+        const qrCodeData = await this.generateQRCode(`https://niip.co.tz/verify/receipt/${payment.id}`);
         if (qrCodeData) {
             doc.addImage(qrCodeData, 'PNG', pageWidth - 40, 15, 25, 25);
         }
@@ -204,14 +238,17 @@ export class PdfGenerator {
      * Generate Invoice
      */
     static async generateInvoice(invoice: Invoice, order: Order) {
+        const { jsPDF, autoTable } = await this.getJsPDF();
         const doc = new jsPDF();
-        this.addHeader(doc, "Tax Invoice");
+
+        // Pass insurer info if available
+        this.addHeader(doc, "Tax Invoice", order.policy?.insurer);
 
         const startY = 60;
         const pageWidth = doc.internal.pageSize.width;
 
         // Add QR Code
-        const qrCodeData = await this.generateQRCode(`https://tiips.co.tz/verify/invoice/${invoice.id}`);
+        const qrCodeData = await this.generateQRCode(`https://niip.co.tz/verify/invoice/${invoice.id}`);
         if (qrCodeData) {
             doc.addImage(qrCodeData, 'PNG', pageWidth - 40, 15, 25, 25);
         }
@@ -280,14 +317,15 @@ export class PdfGenerator {
      * Generate Order Summary
      */
     static async generateOrderSummary(order: Order) {
+        const { jsPDF, autoTable } = await this.getJsPDF();
         const doc = new jsPDF();
-        this.addHeader(doc, "Order Summary");
+        this.addHeader(doc, "Order Summary", order.policy?.insurer);
 
         const startY = 60;
         const pageWidth = doc.internal.pageSize.width;
 
         // Add QR Code
-        const qrCodeData = await this.generateQRCode(`https://tiips.co.tz/verify/order/${order.id}`);
+        const qrCodeData = await this.generateQRCode(`https://niip.co.tz/verify/order/${order.id}`);
         if (qrCodeData) {
             doc.addImage(qrCodeData, 'PNG', pageWidth - 40, 15, 25, 25);
         }

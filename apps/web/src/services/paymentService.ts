@@ -5,7 +5,6 @@ export class PaymentService {
      * Initiate a simulated mobile money payment
      */
     static async initiatePayment(userId: string, invoiceId: string, provider: string, phone: string, amount: number) {
-        // 1. Validate Invoice existence
         const invoice = await prisma.invoice.findUnique({
             where: { id: invoiceId },
         });
@@ -18,7 +17,6 @@ export class PaymentService {
             throw new Error("Invoice is already paid");
         }
 
-        // 2. Create Pending Payment Record
         const payment = await prisma.payment.create({
             data: {
                 userId,
@@ -30,10 +28,6 @@ export class PaymentService {
             },
         });
 
-        // 3. Simulate Async Process (In a real app, this would be a request to the MNO gateway)
-        // For the demo, we'll just return the payment record. 
-        // The frontend will Poll or the simulated webhook will update it.
-
         return payment;
     }
 
@@ -43,12 +37,31 @@ export class PaymentService {
     static async getPaymentStatus(paymentId: string) {
         return await prisma.payment.findUnique({
             where: { id: paymentId },
+            include: {
+                invoice: true, // Include invoice data for SUCCESS response
+            },
+        });
+    }
+
+    /**
+     * Update payment status (used by callback)
+     */
+    static async updatePaymentStatus(
+        paymentId: string,
+        status: PaymentStatus,
+        transactionId?: string
+    ) {
+        return await prisma.payment.update({
+            where: { id: paymentId },
+            data: {
+                status,
+                transactionId,
+            },
         });
     }
 
     /**
      * Simulate a successful callback (Demo only)
-     * This forces a payment to SUCCESS and updates the invoice
      */
     static async simulatePaymentSuccess(paymentId: string) {
         const payment = await prisma.payment.findUnique({
@@ -58,7 +71,6 @@ export class PaymentService {
 
         if (!payment) throw new Error("Payment not found");
 
-        // Transaction Block: Update Payment and Invoice
         await prisma.$transaction([
             prisma.payment.update({
                 where: { id: paymentId },
@@ -77,8 +89,7 @@ export class PaymentService {
             prisma.order.update({
                 where: { id: payment.invoice.orderId },
                 data: {
-                    status: "PAID",
-                    validationStatus: "VALID"
+                    status: "APPROVED" 
                 }
             }),
         ]);

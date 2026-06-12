@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
     try {
@@ -8,59 +6,82 @@ export async function POST(req: Request) {
         const {
             email,
             password,
+            confirmPassword,
             fullName,
             phone,
-            postalAddress,
             physicalAddress,
             brelaNumber,
             tinNumber,
             natureOfBusiness,
-            signature,
+            role,
+            companyName,
         } = body;
 
         if (!email || !password || !fullName) {
             return NextResponse.json(
-                { error: "Missing required fields" },
+                { error: "Missing required fields (Name, Email, and Password are required)" },
                 { status: 400 }
             );
         }
 
-        const existingUser = await prisma.user.findUnique({
-            where: { email },
-        });
+        const isInsurer = role === "INSURER";
+        const remoteUrl = isInsurer 
+            ? "https://marineinsuranceapi.akiliapp.co.tz/api/v1/insurer/register"
+            : "https://marineinsuranceapi.akiliapp.co.tz/api/v1/auth/register/customer";
 
-        if (existingUser) {
-            return NextResponse.json(
-                { error: "User already exists" },
-                { status: 400 }
-            );
-        }
+        const payload = isInsurer
+            ? {
+                  name: companyName || fullName,
+                  contact_person_name: fullName,
+                  company_email: email,
+                  contact_person_phone: phone,
+                  registration_number: brelaNumber || "BRELA-TEMP",
+                  tin: tinNumber || "TIN-TEMP",
+                  address: physicalAddress || "Dar es Salaam, Tanzania",
+                  description: natureOfBusiness || "Marine cargo underwriter",
+                  password: password,
+                  password_confirmation: confirmPassword || password,
+              }
+            : {
+                  name: fullName,
+                  email: email,
+                  password: password,
+                  password_confirmation: confirmPassword || password,
+                  phone: phone || "+255700000000",
+              };
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                fullName,
-                phone,
-                postalAddress,
-                physicalAddress,
-                brelaNumber,
-                tinNumber,
-                natureOfBusiness,
-                signature,
-                role: "USER", // Default role
+        const res = await fetch(remoteUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
             },
+            body: JSON.stringify(payload),
         });
 
-        const { password: _, ...userWithoutPassword } = user;
+        const data = await res.json();
 
-        return NextResponse.json(userWithoutPassword, { status: 201 });
+        if (!res.ok) {
+            return NextResponse.json(
+                { error: data.message || "Registration failed" },
+                { status: res.status }
+            );
+        }
+
+        // Return a shape consistent with the local frontend expectations
+        const mappedUser = {
+            id: (data.data?.user?.id || data.data?.id || "temp-id").toString(),
+            email: email,
+            fullName: fullName,
+            role: isInsurer ? "INSURER" : "USER",
+            status: isInsurer ? "PENDING" : "APPROVED",
+        };
+
+        return NextResponse.json(mappedUser, { status: 201 });
     } catch (error: any) {
         console.error("Registration error:", error);
         return NextResponse.json(
-            { error: "Internal server error" },
+            { error: error.message || "Internal server error" },
             { status: 500 }
         );
     }

@@ -20,7 +20,7 @@ export class InvoiceService {
     static calculateInvoice(sumInsured: number, policyRate: number): InvoiceCalculation {
         const premium = sumInsured * (policyRate / 100);
         const tiraLevy = premium * 0.01; // 1% TIRA levy
-        const stampDuty = 2000; // TZS 2,000 stamp duty
+        const stampDuty = 1000; // TZS 2,000 stamp duty
         const total = premium + tiraLevy + stampDuty;
 
         return {

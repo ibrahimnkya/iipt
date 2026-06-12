@@ -12,8 +12,8 @@ export async function GET() {
 
         // Return default settings
         const settings = {
-            siteName: "TIIPS",
-            siteEmail: "admin@tiips.co.tz",
+            siteName: "NIIS-T",
+            siteEmail: "admin@niip.co.tz",
             enableNotifications: true,
             enableEmailAlerts: true,
             maintenanceMode: false,

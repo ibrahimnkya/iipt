@@ -1,7 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@tiips/db";
 
 export async function GET() {
     try {
@@ -11,38 +12,38 @@ export async function GET() {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        // Fetch dashboard statistics
-        const [totalOrders, paidInvoices, orders] = await Promise.all([
-            prisma.order.count(),
-            prisma.invoice.aggregate({
-                where: { status: "PAID" },
-                _sum: {
-                    amount: true,
-                },
-            }),
-            prisma.order.findMany({
-                select: {
-                    transportMode: true,
-                    status: true,
-                },
-            }),
-        ]);
+        const token = session.user.accessToken;
 
-        // Calculate cargo statistics by transport mode
-        const marineCargo = orders.filter(
-            (o) => o.transportMode === "SEA" && o.status !== "CANCELLED"
-        ).length;
-        const airCargo = orders.filter(
-            (o) => o.transportMode === "AIR" && o.status !== "CANCELLED"
-        ).length;
-        const roadCargo = orders.filter(
-            (o) => o.transportMode === "ROAD" && o.status !== "CANCELLED"
-        ).length;
+        // Fetch remote orders
+        const ordersRes = await fetch("https://marineinsuranceapi.akiliapp.co.tz/api/v1/orders", {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/json"
+            }
+        });
 
-        const pendingOrders = orders.filter((o) => o.status === "PENDING").length;
+        if (!ordersRes.ok) {
+            throw new Error("Failed to fetch dashboard orders from remote backend");
+        }
+
+        const ordersJson = await ordersRes.json();
+        const rawOrders = ordersJson.data?.data || ordersJson.data || [];
+
+        const totalOrders = rawOrders.length;
+        const pendingOrders = rawOrders.filter((o: any) => o.status?.toLowerCase() === "pending").length;
+        
+        // Sum total premium of approved/issued/submitted orders as revenue
+        const totalPremiumPaid = rawOrders
+            .filter((o: any) => o.status?.toLowerCase() === "approved" || o.status?.toLowerCase() === "issued" || o.status?.toLowerCase() === "submitted" || o.status?.toLowerCase() === "paid")
+            .reduce((sum: number, o: any) => sum + parseFloat(o.total_premium || 0), 0);
+
+        // Cargo distributions
+        const marineCargo = rawOrders.filter((o: any) => o.transport_mode?.toLowerCase() === "sea" || o.transport_mode?.toLowerCase() === "marine" || o.transport_mode_id === 1).length;
+        const airCargo = rawOrders.filter((o: any) => o.transport_mode?.toLowerCase() === "air" || o.transport_mode_id === 2).length;
+        const roadCargo = rawOrders.filter((o: any) => o.transport_mode?.toLowerCase() === "road" || o.transport_mode_id === 3).length;
 
         const stats = {
-            totalPremiumPaid: paidInvoices._sum.amount || 0,
+            totalPremiumPaid,
             marineCargo,
             airCargo,
             roadCargo,

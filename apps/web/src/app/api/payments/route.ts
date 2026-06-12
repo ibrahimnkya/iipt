@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@tiips/db";
 
 export async function GET(req: Request) {
     try {
@@ -11,42 +10,42 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const payments = await prisma.payment.findMany({
-            where: {
-                userId: session.user.id
-            },
-            include: {
-                invoice: {
-                    include: {
-                        order: true
-                    }
-                }
-            },
-            orderBy: {
-                createdAt: 'desc'
+        const token = (session.user as any).accessToken;
+
+        const res = await fetch("https://marineinsuranceapi.akiliapp.co.tz/api/v1/payments", {
+            headers: {
+                "Accept": "application/json",
+                "Authorization": `Bearer ${token}`
             }
         });
 
+        if (!res.ok) {
+            throw new Error("Failed to fetch payments from remote backend");
+        }
+
+        const json = await res.json();
+        const rawPayments = json.data?.data || json.data || [];
+
         // Map to frontend expectation
-        const formattedPayments = payments.map(payment => ({
-            id: payment.id,
-            amount: payment.amount,
-            method: payment.provider, // Map provider to method
-            status: payment.status,
-            createdAt: payment.createdAt,
+        const formattedPayments = rawPayments.map((p: any) => ({
+            id: p.id.toString(),
+            amount: parseFloat(p.amount || 0),
+            method: p.payment_method || "bank_transfer", // Map payment_method to method
+            status: p.status?.toUpperCase() || "SUCCESS",
+            createdAt: p.created_at || new Date().toISOString(),
             invoice: {
-                id: payment.invoice.id,
+                id: (p.invoice_id || 1).toString(),
                 order: {
-                    id: payment.invoice.order.id,
-                    cargoDescription: payment.invoice.order.cargoDescription,
-                    currency: payment.invoice.order.currency
+                    id: (p.order_id || 1).toString(),
+                    cargoDescription: p.order?.description || "General Cargo",
+                    currency: p.order?.currency || "USD"
                 }
             }
         }));
 
         return NextResponse.json(formattedPayments);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to fetch payments:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
     }
 }

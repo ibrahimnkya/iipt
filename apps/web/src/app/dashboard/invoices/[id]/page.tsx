@@ -11,7 +11,6 @@ import {
     XCircle,
     ArrowLeft,
     Download,
-    DollarSign,
     Calendar,
     AlertCircle,
     CreditCard,
@@ -27,6 +26,7 @@ import {
     Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PdfGenerator } from "@/lib/pdfGenerator";
 
 interface Payment {
@@ -57,6 +57,16 @@ interface Invoice {
         policy: {
             name: string;
             clauseType: string;
+            insurer?: {
+                id: string;
+                fullName: string;
+                companyName: string | null;
+                logoUrl: string | null;
+                email: string;
+                phone: string;
+                physicalAddress: string | null;
+                postalAddress: string | null;
+            } | null;
         };
     };
     payments: Payment[];
@@ -101,7 +111,7 @@ export default function InvoiceDetailPage() {
             // Transform invoice data to match PdfGenerator interface
             const invoiceData = {
                 ...invoice,
-                currency: invoice.order.currency // Ensure currency is at top level
+                currency: invoice.order?.currency || "USD" // Ensure currency is at top level
             };
 
             // Transform order data to match PdfGenerator interface if needed
@@ -112,13 +122,109 @@ export default function InvoiceDetailPage() {
 
     if (status === "loading" || loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-center">
-                    <div className="relative w-12 h-12 mx-auto mb-4">
-                        <div className="absolute inset-0 border-2 border-slate-200 rounded-full"></div>
-                        <div className="absolute inset-0 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-slate-50 -m-8 p-8 font-sans">
+                {/* Header Actions skeleton */}
+                <div className="max-w-5xl mx-auto mb-6">
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-9 w-32 rounded-lg" />
+                        <div className="flex gap-2">
+                            <Skeleton className="w-8 h-8 rounded-md" />
+                            <Skeleton className="h-9 w-32 rounded-md" />
+                        </div>
                     </div>
-                    <p className="text-slate-600 text-sm">Loading invoice...</p>
+                </div>
+
+                {/* Main Invoice Card skeleton */}
+                <div className="max-w-5xl mx-auto bg-white shadow-sm border border-slate-200 rounded-none overflow-hidden">
+                    {/* Invoice Header */}
+                    <div className="px-12 pt-12 pb-8 border-b border-slate-200">
+                        <div className="flex items-start justify-between mb-8">
+                            {/* Company Info */}
+                            <div className="flex gap-4">
+                                <Skeleton className="w-16 h-16 rounded-xl" />
+                                <div className="space-y-2 mt-1">
+                                    <Skeleton className="h-6 w-48 rounded" />
+                                    <Skeleton className="h-4 w-36 rounded" />
+                                </div>
+                            </div>
+                            {/* Invoice Info */}
+                            <div className="text-right space-y-3">
+                                <Skeleton className="h-8 w-28 rounded ml-auto" />
+                                <Skeleton className="h-6 w-20 rounded-full ml-auto" />
+                                <div className="space-y-1 mt-2">
+                                    <Skeleton className="h-3 w-32 rounded ml-auto" />
+                                    <Skeleton className="h-3.5 w-24 rounded ml-auto" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="space-y-1.5 max-w-sm mt-4">
+                            <Skeleton className="h-3 w-40 rounded" />
+                            <Skeleton className="h-3 w-32 rounded" />
+                            <Skeleton className="h-3 w-44 rounded" />
+                        </div>
+                    </div>
+
+                    {/* Invoice Addresses */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-12 py-8 bg-slate-50/50 border-b border-slate-200">
+                        <div className="space-y-3">
+                            <Skeleton className="h-3 w-20 rounded uppercase tracking-wider" />
+                            <div className="space-y-1.5">
+                                <Skeleton className="h-5 w-48 rounded" />
+                                <Skeleton className="h-3.5 w-40 rounded" />
+                                <Skeleton className="h-3.5 w-36 rounded" />
+                                <Skeleton className="h-3.5 w-44 rounded" />
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <Skeleton className="h-3 w-24 rounded uppercase tracking-wider" />
+                            <div className="space-y-1.5">
+                                <Skeleton className="h-4 w-56 rounded" />
+                                <div className="flex gap-2">
+                                    <Skeleton className="h-3.5 w-20 rounded" />
+                                    <Skeleton className="h-3.5 w-24 rounded" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Invoice Items Table */}
+                    <div className="px-12 py-8">
+                        <div className="border border-slate-200 rounded-lg overflow-hidden">
+                            <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex justify-between">
+                                <Skeleton className="h-4 w-40 rounded" />
+                                <Skeleton className="h-4 w-16 rounded" />
+                            </div>
+                            <div className="divide-y divide-slate-100 p-6 space-y-4">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="flex justify-between items-center py-1.5">
+                                        <div className="space-y-1.5">
+                                            <Skeleton className="h-4 w-56 rounded" />
+                                            <Skeleton className="h-3 w-28 rounded" />
+                                        </div>
+                                        <Skeleton className="h-4.5 w-20 rounded" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Calculations Summary */}
+                    <div className="px-12 pb-12 pt-4 flex justify-end">
+                        <div className="w-80 space-y-3 border-t border-slate-100 pt-4">
+                            <div className="flex justify-between">
+                                <Skeleton className="h-3.5 w-20 rounded" />
+                                <Skeleton className="h-3.5 w-24 rounded" />
+                            </div>
+                            <div className="flex justify-between">
+                                <Skeleton className="h-3.5 w-16 rounded" />
+                                <Skeleton className="h-3.5 w-20 rounded" />
+                            </div>
+                            <div className="flex justify-between border-t border-slate-200 pt-3">
+                                <Skeleton className="h-5 w-24 rounded" />
+                                <Skeleton className="h-6 w-32 rounded" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -222,19 +328,29 @@ export default function InvoiceDetailPage() {
                         {/* Company Info */}
                         <div>
                             <div className="flex items-center gap-4 mb-4">
-                                <div className="w-16 h-16 flex bg-transparent items-center justify-center  overflow-hidden">
-                                    <img src="/logo.svg" alt="TIIP Logo" className="w-full h-full object-contain" />
+                                <div className="w-16 h-16 flex bg-transparent items-center justify-center overflow-hidden">
+                                    {invoice.order?.policy?.insurer?.logoUrl ? (
+                                        <img
+                                            src={invoice.order.policy.insurer.logoUrl}
+                                            alt={invoice.order.policy.insurer.companyName || invoice.order.policy.insurer.fullName}
+                                            className="w-full h-full object-contain"
+                                        />
+                                    ) : (
+                                        <img src="/logo.svg" alt="NIIS-T Logo" className="w-full h-full object-contain" />
+                                    )}
                                 </div>
 
                                 <div>
-                                    <h1 className="text-2xl font-bold text-slate-900">TIIP Insurance</h1>
+                                    <h1 className="text-2xl font-bold text-slate-900">
+                                        {invoice.order?.policy?.insurer?.companyName || invoice.order?.policy?.insurer?.fullName || "NIIS-T Insurance"}
+                                    </h1>
                                     <p className="text-sm text-slate-600">Transport & Cargo Insurance</p>
                                 </div>
                             </div>
-                            <div className="space-y-1 text-sm text-slate-600">
-                                <p>Dar es Salaam, Tanzania</p>
-                                <p>+255 123 456 789</p>
-                                <p>support@tiips.co.tz</p>
+                            <div className="space-y-1 text-sm text-slate-650">
+                                <p>{invoice.order?.policy?.insurer?.physicalAddress || invoice.order?.policy?.insurer?.postalAddress || "Dar es Salaam, Tanzania"}</p>
+                                <p>{invoice.order?.policy?.insurer?.phone || "+255 123 456 789"}</p>
+                                <p>{invoice.order?.policy?.insurer?.email || "support@niip.co.tz"}</p>
                             </div>
                         </div>
 
@@ -297,7 +413,7 @@ export default function InvoiceDetailPage() {
                         <div>
                             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Order Details</p>
                             <div className="text-sm text-slate-600">
-                                <p>Order ID: <span className="font-mono font-medium">{invoice.order.id.slice(0, 8)}</span></p>
+                                <p>Order ID: <span className="font-mono font-medium">{invoice.order?.id?.slice(0, 8) ?? ""}</span></p>
                             </div>
                         </div>
                     </div>
@@ -314,19 +430,19 @@ export default function InvoiceDetailPage() {
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-slate-500 text-xs mb-1">Cargo Description</p>
-                                    <p className="text-slate-900 font-medium">{invoice.order.cargoDescription}</p>
+                                    <p className="text-slate-900 font-medium">{invoice.order?.cargoDescription || "N/A"}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500 text-xs mb-1">Cargo Type</p>
-                                    <p className="text-slate-900 font-medium">{invoice.order.cargoNature}</p>
+                                    <p className="text-slate-900 font-medium">{invoice.order?.cargoNature || "N/A"}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500 text-xs mb-1">Origin</p>
-                                    <p className="text-slate-900 font-medium">{invoice.order.originPort}</p>
+                                    <p className="text-slate-900 font-medium">{invoice.order?.originPort || "N/A"}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500 text-xs mb-1">Destination</p>
-                                    <p className="text-slate-900 font-medium">{invoice.order.destinationPort}</p>
+                                    <p className="text-slate-900 font-medium">{invoice.order?.destinationPort || "N/A"}</p>
                                 </div>
                             </div>
                         </div>
@@ -352,16 +468,16 @@ export default function InvoiceDetailPage() {
                                 <tr className="border-b border-slate-100">
                                     <td className="py-4">
                                         <p className="font-medium text-slate-900 mb-0.5">Marine Cargo Insurance Premium</p>
-                                        <p className="text-sm text-slate-600">{invoice.order.policy.name}</p>
+                                        <p className="text-sm text-slate-600">{invoice.order?.policy?.name || "Marine Cargo Policy"}</p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                            Clause Type: {invoice.order.policy.clauseType}
+                                            Clause Type: {invoice.order?.policy?.clauseType || "Class A"}
                                         </p>
                                     </td>
                                     <td className="py-4 text-right text-sm text-slate-600">
-                                        {invoice.order.currency} {invoice.order.sumInsured.toLocaleString()}
+                                        {invoice.order?.currency || "USD"} {invoice.order?.sumInsured?.toLocaleString() ?? "0.00"}
                                     </td>
                                     <td className="py-4 text-right font-semibold text-slate-900">
-                                        {invoice.order.currency} {invoice.amount.toLocaleString()}
+                                        {invoice.order?.currency || "USD"} {invoice.amount?.toLocaleString() ?? "0.00"}
                                     </td>
                                 </tr>
                             </tbody>
@@ -375,12 +491,12 @@ export default function InvoiceDetailPage() {
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-600">Subtotal</span>
                                     <span className="font-medium text-slate-900">
-                                        {invoice.order.currency} {invoice.amount.toLocaleString()}
+                                        {invoice.order?.currency || "USD"} {invoice.amount?.toLocaleString() ?? "0.00"}
                                     </span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-slate-600">Tax</span>
-                                    <span className="font-medium text-slate-900">{invoice.order.currency} 0.00</span>
+                                    <span className="font-medium text-slate-900">{invoice.order?.currency || "USD"} 0.00</span>
                                 </div>
                             </div>
                             <div className="pt-4 border-t-2 border-slate-900">
@@ -389,7 +505,7 @@ export default function InvoiceDetailPage() {
                                         Total
                                     </span>
                                     <span className="text-2xl font-bold text-slate-900">
-                                        {invoice.order.currency} {invoice.amount.toLocaleString()}
+                                        {invoice.order?.currency || "USD"} {invoice.amount?.toLocaleString() ?? "0.00"}
                                     </span>
                                 </div>
                             </div>
@@ -398,13 +514,13 @@ export default function InvoiceDetailPage() {
                                     <div className="flex justify-between text-sm">
                                         <span className="text-emerald-700 font-medium">Amount Paid</span>
                                         <span className="font-semibold text-emerald-700">
-                                            {invoice.order.currency} {totalPaid.toLocaleString()}
+                                            {invoice.order?.currency || "USD"} {totalPaid.toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-baseline pt-2 border-t border-slate-200">
                                         <span className="text-sm font-semibold text-slate-900">Balance Due</span>
                                         <span className="text-xl font-bold text-slate-900">
-                                            {invoice.order.currency} {remainingBalance.toLocaleString()}
+                                            {invoice.order?.currency || "USD"} {remainingBalance.toLocaleString()}
                                         </span>
                                     </div>
                                 </div>
@@ -441,7 +557,7 @@ export default function InvoiceDetailPage() {
                                         </div>
                                         <div className="text-right">
                                             <p className="font-semibold text-slate-900">
-                                                {invoice.order.currency} {payment.amount.toLocaleString()}
+                                                {invoice.order?.currency || "USD"} {payment.amount?.toLocaleString() ?? "0.00"}
                                             </p>
                                             <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${payment.status === 'SUCCESS' || payment.status === 'COMPLETED'
                                                 ? 'bg-emerald-100 text-emerald-700'
@@ -468,7 +584,7 @@ export default function InvoiceDetailPage() {
                                 <div className="text-slate-600 space-y-1">
                                     <p><span className="font-medium">Bank:</span> CRDB Bank Tanzania</p>
                                     <p><span className="font-medium">Account:</span> 0123456789</p>
-                                    <p><span className="font-medium">Swift:</span> TIIPTZ</p>
+                                    <p><span className="font-medium">Swift:</span> NIISTZ</p>
                                 </div>
                             </div>
                             <div>
@@ -489,7 +605,7 @@ export default function InvoiceDetailPage() {
                 <div className="px-12 py-6 bg-slate-50 border-t border-slate-200">
                     <div className="flex items-center justify-between text-xs text-slate-500">
                         <p>This is a computer-generated invoice</p>
-                        <p>www.tiip.co.tz</p>
+                        <p>Powered by NIIS-T</p>
                     </div>
                 </div>
             </div>
@@ -499,7 +615,7 @@ export default function InvoiceDetailPage() {
                 <div className="max-w-5xl mx-auto mt-6 flex justify-end no-print">
                     <button className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white font-medium rounded hover:bg-slate-800 transition-all">
                         <CreditCard className="w-4 h-4" />
-                        Pay {invoice.order.currency} {remainingBalance.toLocaleString()}
+                        Pay {invoice.order?.currency || "USD"} {remainingBalance.toLocaleString()}
                     </button>
                 </div>
             )}

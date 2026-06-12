@@ -254,7 +254,7 @@ export default function AdminInvoiceDetailPage() {
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black text-gray-400 uppercase">Currency</p>
-                                        <p className="text-sm font-bold text-gray-900">{invoice.currency} - Tanzanian Shilling</p>
+                                        <p className="text-sm font-bold text-gray-900">Tsh - Tanzanian Shilling</p>
                                     </div>
                                 </div>
                             </div>
@@ -293,8 +293,8 @@ export default function AdminInvoiceDetailPage() {
                                             <p className="text-xs text-gray-400 font-medium mt-1">Service Code: INS-GEN-01</p>
                                         </td>
                                         <td className="py-6 text-center font-bold text-gray-500">{item.quantity}</td>
-                                        <td className="py-6 text-right font-bold text-gray-700">{invoice.currency} {item.unitPrice.toLocaleString()}</td>
-                                        <td className="py-6 text-right font-black text-gray-900">{invoice.currency} {item.amount.toLocaleString()}</td>
+                                        <td className="py-6 text-right font-bold text-gray-700">Tsh {item.unitPrice.toLocaleString()}</td>
+                                        <td className="py-6 text-right font-black text-gray-900">Tsh {item.amount.toLocaleString()}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -306,7 +306,7 @@ export default function AdminInvoiceDetailPage() {
                         <div className="max-w-xs">
                             <h3 className="text-sm font-black text-gray-900 mb-2 uppercase tracking-tight">Terms & Notes</h3>
                             <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                                Payment is expected within 30 days of issue. For any inquiries regarding this document, please contact our financial department at billing@tiips.co.tz.
+                                Payment is expected within 30 days of issue. For any inquiries regarding this document, please contact our financial department at billing@niip.co.tz.
                             </p>
                             <div className="mt-6 flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-brand-green" />
@@ -316,17 +316,17 @@ export default function AdminInvoiceDetailPage() {
                         <div className="w-full md:w-80 space-y-4">
                             <div className="flex justify-between items-center text-sm font-medium">
                                 <span className="text-gray-500">Subtotal</span>
-                                <span className="text-gray-900">{invoice.currency} {invoice.subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                <span className="text-gray-900">Tsh {invoice.subtotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm font-medium">
                                 <span className="text-gray-500">Tax (VAT 18%)</span>
-                                <span className="text-gray-900">{invoice.currency} {invoice.taxAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+                                <span className="text-gray-900">Tsh {invoice.taxAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
                             </div>
                             <div className="h-[1px] bg-gray-100 my-2"></div>
                             <div className="flex justify-between items-center">
                                 <span className="text-base font-black text-gray-900">Total Amount</span>
                                 <span className="text-2xl font-black text-brand-blue tracking-tighter">
-                                    {invoice.currency} {invoice.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                                    Tsh {invoice.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                                 </span>
                             </div>
                         </div>
@@ -339,7 +339,7 @@ export default function AdminInvoiceDetailPage() {
                         <div className="w-8 h-8 rounded-lg bg-white border border-gray-150 flex items-center justify-center">
                             <FileText className="w-4 h-4 text-gray-400" />
                         </div>
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">TIIPS-FINANCE-DOC-E342</p>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">NIIS-T-FINANCE-DOC-E342</p>
                     </div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Page 1 of 1</p>
                 </div>
@@ -348,8 +348,8 @@ export default function AdminInvoiceDetailPage() {
             {/* Support Information */}
             <div className="flex justify-center gap-12 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                 <p>Support: +255 700 000 000</p>
-                <p>Email: help@tiips.co.tz</p>
-                <p>Portal: tiips.co.tz</p>
+                <p>Email: help@niip.co.tz</p>
+                <p>Portal: niip.co.tz</p>
             </div>
         </div>
     );

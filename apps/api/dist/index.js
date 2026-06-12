@@ -25,5 +25,5 @@ app.get("/api/test-db", async (req, res) => {
     }
 });
 app.listen(port, () => {
-    console.log(`TIIPS API listening at http://localhost:${port}`);
+    console.log(`IIPT API listening at http://localhost:${port}`);
 });

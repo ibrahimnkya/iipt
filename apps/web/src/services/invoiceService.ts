@@ -20,7 +20,7 @@ export class InvoiceService {
     static calculateInvoice(sumInsured: number, policyRate: number): InvoiceCalculation {
         const premium = sumInsured * (policyRate / 100);
         const tiraLevy = premium * 0.01; // 1% TIRA levy
-        const stampDuty = 2000; // TZS 2,000 stamp duty
+        const stampDuty = 1000; // TZS 2,000 stamp duty
         const total = premium + tiraLevy + stampDuty;
 
         return {
@@ -53,7 +53,22 @@ export class InvoiceService {
                                 fullName: true,
                             },
                         },
-                        policy: true,
+                        policy: {
+                            include: {
+                                insurer: {
+                                    select: {
+                                        id: true,
+                                        fullName: true,
+                                        companyName: true,
+                                        logoUrl: true,
+                                        email: true,
+                                        phone: true,
+                                        physicalAddress: true,
+                                        postalAddress: true,
+                                    }
+                                }
+                            }
+                        },
                     },
                 },
             },
@@ -82,7 +97,22 @@ export class InvoiceService {
                                 phone: true,
                             },
                         },
-                        policy: true,
+                        policy: {
+                            include: {
+                                insurer: {
+                                    select: {
+                                        id: true,
+                                        fullName: true,
+                                        companyName: true,
+                                        logoUrl: true,
+                                        email: true,
+                                        phone: true,
+                                        physicalAddress: true,
+                                        postalAddress: true,
+                                    }
+                                }
+                            }
+                        },
                     },
                 },
                 payments: {
@@ -107,7 +137,22 @@ export class InvoiceService {
             include: {
                 order: {
                     include: {
-                        policy: true,
+                        policy: {
+                            include: {
+                                insurer: {
+                                    select: {
+                                        id: true,
+                                        fullName: true,
+                                        companyName: true,
+                                        logoUrl: true,
+                                        email: true,
+                                        phone: true,
+                                        physicalAddress: true,
+                                        postalAddress: true,
+                                    }
+                                }
+                            }
+                        },
                     },
                 },
                 payments: true,
@@ -133,7 +178,22 @@ export class InvoiceService {
                                 fullName: true,
                             },
                         },
-                        policy: true,
+                        policy: {
+                            include: {
+                                insurer: {
+                                    select: {
+                                        id: true,
+                                        fullName: true,
+                                        companyName: true,
+                                        logoUrl: true,
+                                        email: true,
+                                        phone: true,
+                                        physicalAddress: true,
+                                        postalAddress: true,
+                                    }
+                                }
+                            }
+                        },
                     },
                 },
                 payments: true,

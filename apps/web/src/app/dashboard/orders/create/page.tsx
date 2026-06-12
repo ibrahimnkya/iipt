@@ -11,7 +11,7 @@ import {
     Ship,
     Plane,
     Truck,
-    DollarSign,
+    Wallet,
     Globe,
     CheckCircle2,
     Shield,
@@ -22,18 +22,31 @@ import {
     FileText,
     AlertCircle,
     Sparkles,
-    X,
-    Box,
-    Anchor,
     ChevronRight,
     Building2,
     FileSignature,
     Warehouse,
-    ClipboardList
+    ClipboardList,
+    User,
+    ShoppingCart,
+    Users,
+    HelpCircle,
+    AlertTriangle,
+    Anchor,
+    Box,
+    FileCode,
+    Receipt,
+    Percent,
+    ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import DocumentUploadStep, { ExtractedData } from "./DocumentUploadStep";
 
+// Steps configuration
 const STEPS = [
+    { title: "Upload Document", icon: FileText, description: "Auto-fill from invoice or B/L" },
     { title: "Insurable Interest", icon: Building2, description: "Your relationship to cargo" },
     { title: "Cargo Details", icon: Package, description: "Describe your shipment" },
     { title: "Voyage Details", icon: Globe, description: "Origin, destination & transport" },
@@ -43,19 +56,67 @@ const STEPS = [
     { title: "Declaration", icon: FileSignature, description: "Review & submit" },
 ];
 
-const PROPOSER_CAPACITY = ["Owner", "Buyer", "Seller", "Agent", "Other"];
-const INCOTERMS = ["CIF", "CFR", "FOB", "Other"];
-const CARGO_NATURE_OPTIONS = ["General", "Fragile", "Perishable", "Hazardous", "Bulk"];
-const PACKAGING_METHODS = ["Bags", "Cartons", "Pallets", "Containers", "Bulk", "Other"];
+const PROPOSER_CAPACITY = [
+    { name: "Owner", icon: User, desc: "Legal owner of the goods" },
+    { name: "Buyer", icon: ShoppingCart, desc: "Purchasing party of shipment" },
+    { name: "Seller", icon: Building2, desc: "Supplier or exporting party" },
+    { name: "Agent", icon: Users, desc: "Authorized clearing/trade representative" },
+    { name: "Other", icon: HelpCircle, desc: "Other custom capacity roles" }
+];
+
+const INCOTERMS = [
+    { name: "CIF", desc: "Cost, Insurance & Freight (Seller handles freight, you cover insurance)" },
+    { name: "CFR", desc: "Cost & Freight (Seller handles freight, no cargo cover)" },
+    { name: "FOB", desc: "Free On Board (Seller covers until loaded on vessel)" },
+    { name: "Other", desc: "Other custom international trade arrangements" }
+];
+
+const CARGO_NATURE_OPTIONS = [
+    { name: "General", icon: Box, desc: "Dry standard cargo (clothing, equipment)" },
+    { name: "Fragile", icon: AlertTriangle, desc: "Glass, electronics, ceramics (high care)" },
+    { name: "Perishable", icon: Calendar, desc: "Foods, pharmaceuticals (temp-sensitive)" },
+    { name: "Hazardous", icon: AlertCircle, desc: "Chemicals, gas, batteries (regulated)" },
+    { name: "Bulk", icon: Anchor, desc: "Loose grains, ore, liquids (unpackaged)" }
+];
+
+const PACKAGING_METHODS = [
+    { name: "Bags", icon: Box, desc: "Sacks, fabric, or paper bags" },
+    { name: "Cartons", icon: Box, desc: "Cardboard boxes or cases" },
+    { name: "Pallets", icon: Warehouse, desc: "Stacked crates on wooden/plastic grids" },
+    { name: "Containers", icon: Ship, desc: "Standardized shipping container loads" },
+    { name: "Bulk", icon: Anchor, desc: "Loose bulk load cargo" },
+    { name: "Other", icon: HelpCircle, desc: "Other custom packaging types" }
+];
+
+const VALUATION_BASIS = [
+    { name: "CIF", desc: "Cost, Insurance & Freight (Invoice + 10% standard)" },
+    { name: "Invoice", desc: "Base cargo invoice value only" },
+    { name: "Other", desc: "Other custom valuation agreements" }
+];
+
+// Defined missing constant to resolve ReferenceError
 const TRANSPORT_MODES = ["Sea", "Air", "Road", "Rail", "Multimodal"];
-const VALUATION_BASIS = ["CIF", "Invoice", "Other"];
 
 export default function CreateOrderPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
+    const [aiPrefilledFields, setAiPrefilledFields] = useState<string[]>([]);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [submittedData, setSubmittedData] = useState<{
+        orderId: string;
+        invoiceNumber?: string;
+        sumInsured?: number;
+        totalPremium?: number;
+        currency?: string;
+        insurerName?: string;
+    } | null>(null);
     const [policies, setPolicies] = useState<any[]>([]);
+    const [insurers, setInsurers] = useState<any[]>([]);
+    const [selectedInsurerId, setSelectedInsurerId] = useState<string>("");
+    const [countries, setCountries] = useState<any[]>([]);
+    const [ports, setPorts] = useState<any[]>([]);
     const [formData, setFormData] = useState({
         // A. Insurable Interest
         proposerCapacity: "",
@@ -109,7 +170,7 @@ export default function CreateOrderPage() {
         // I. Declaration
         proposerName: "",
         acceptTerms: false,
-        declarationDate: new Date().toISOString().split('T')[0],
+        declarationDate: typeof window !== "undefined" ? new Date().toISOString().split('T')[0] : "",
     });
 
     useEffect(() => {
@@ -119,22 +180,273 @@ export default function CreateOrderPage() {
     }, [status, router]);
 
     useEffect(() => {
+        // Fetch policies
         fetch("/api/policies")
             .then((res) => res.json())
-            .then((data) => setPolicies(data))
-            .catch((err) => console.error("Failed to fetch policies:", err));
+            .then((data) => setPolicies(Array.isArray(data) ? data : []))
+            .catch((err) => {
+                console.error("Failed to fetch policies:", err);
+                setPolicies([]);
+            });
+
+        // Fetch insurers
+        fetch("/api/insurers?status=APPROVED")
+            .then((res) => res.json())
+            .then((data) => setInsurers(Array.isArray(data) ? data : []))
+            .catch((err) => {
+                console.error("Failed to fetch insurers:", err);
+                setInsurers([]);
+            });
+
+        // Fetch countries
+        fetch("/api/countries")
+            .then((res) => res.json())
+            .then((data) => setCountries(Array.isArray(data) ? data : []))
+            .catch((err) => {
+                console.error("Failed to fetch countries:", err);
+                setCountries([]);
+            });
+
+        // Fetch ports
+        fetch("/api/ports")
+            .then((res) => res.json())
+            .then((data) => setPorts(Array.isArray(data) ? data : []))
+            .catch((err) => {
+                console.error("Failed to fetch ports:", err);
+                setPorts([]);
+            });
     }, []);
 
-    const selectedPolicy = useMemo(() => {
-        return policies.find(p => p.id === formData.policyId);
-    }, [policies, formData.policyId]);
+    // Prefill form from Rate Simulator query params
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            const cargoVal = params.get("value");
+            const mode = params.get("mode");
+
+            if (cargoVal || mode) {
+                setFormData(prev => ({
+                    ...prev,
+                    ...(cargoVal ? { invoiceValue: cargoVal } : {}),
+                    ...(mode ? { transportMode: mode.charAt(0).toUpperCase() + mode.slice(1).toLowerCase() } : {})
+                }));
+            }
+        }
+    }, []);
+
+    // Auto-calculate Sum Insured based on Policy & Invoice Value
+    useEffect(() => {
+        if (!formData.invoiceValue || !formData.policyId) return;
+
+        const policy = Array.isArray(policies) ? policies.find(p => p.id === formData.policyId) : null;
+        if (!policy) return;
+
+        const val = parseFloat(formData.invoiceValue);
+        if (isNaN(val)) return;
+
+        let calculatedSum = val;
+        const basis = formData.valuationBasis;
+        if (basis === "CIF") {
+            calculatedSum = val * 1.1; // 110%
+        } else {
+            calculatedSum = val;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            sumInsured: calculatedSum.toFixed(2)
+        }));
+
+    }, [formData.invoiceValue, formData.valuationBasis, formData.policyId, policies]);
+
+    const activePolicy = useMemo(() => {
+        return Array.isArray(policies) ? policies.find(p => p.id === formData.policyId) : undefined;
+    }, [formData.policyId, policies]);
+
+    const activeInsurer = useMemo(() => {
+        return Array.isArray(insurers) ? insurers.find(i => i.id === selectedInsurerId) : undefined;
+    }, [selectedInsurerId, insurers]);
+
+    // Live billing calculator for side panel preview
+    const liveEstimate = useMemo(() => {
+        const val = parseFloat(formData.invoiceValue);
+        if (isNaN(val) || val <= 0) return null;
+
+        let calculatedSum = val;
+        if (formData.valuationBasis === "CIF") {
+            calculatedSum = val * 1.1;
+        }
+
+        let rate = 1.5; // default Sea premium rate
+        if (activePolicy && typeof activePolicy.rate === "number") {
+            rate = activePolicy.rate;
+        } else {
+            const mode = formData.transportMode.toLowerCase();
+            if (mode === "sea") rate = 1.5;
+            else if (mode === "air") rate = 2.2;
+            else if (mode === "road") rate = 1.8;
+            else if (mode === "rail") rate = 1.6;
+            else if (mode === "multimodal") rate = 2.0;
+        }
+
+        let basePremium = (calculatedSum * rate) / 100;
+        if (activePolicy && typeof activePolicy.minPremium === "number" && basePremium < activePolicy.minPremium) {
+            basePremium = activePolicy.minPremium;
+        }
+
+        const vatRate = activePolicy && typeof activePolicy.vat === "number" ? activePolicy.vat : 18;
+        const vat = (basePremium * vatRate) / 100;
+        const stampDuty = 2000; // Flat stamp duty/fee
+        const regulatoryLevy = basePremium * 0.005; // 0.5%
+        const total = basePremium + vat + stampDuty + regulatoryLevy;
+
+        return {
+            sumInsured: calculatedSum,
+            rate,
+            basePremium,
+            vat,
+            stampDuty,
+            regulatoryLevy,
+            total
+        };
+    }, [formData.invoiceValue, formData.valuationBasis, formData.transportMode, activePolicy]);
+
+    const filteredOriginPorts = useMemo(() => {
+        if (!formData.originCountry || !Array.isArray(ports)) return [];
+        const isKenya = formData.originCountry.toLowerCase().includes("kenya");
+        const code = isKenya ? "KE" : "TZ";
+        return ports.filter(p => p.country === code);
+    }, [ports, formData.originCountry]);
+
+    const filteredDestPorts = useMemo(() => {
+        if (!formData.destinationCountry || !Array.isArray(ports)) return [];
+        const isKenya = formData.destinationCountry.toLowerCase().includes("kenya");
+        const code = isKenya ? "KE" : "TZ";
+        return ports.filter(p => p.country === code);
+    }, [ports, formData.destinationCountry]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
+
+        if (name === "policyId") {
+            const policy = Array.isArray(policies) ? policies.find(p => p.id === value) : null;
+            if (policy) {
+                setFormData(prev => ({
+                    ...prev,
+                    policyId: value,
+                    valuationBasis: policy.valuationBasis || "Invoice"
+                }));
+                return;
+            }
+        }
+
+        if (name === "originCountry") {
+            setFormData(prev => ({
+                ...prev,
+                originCountry: value,
+                originPort: ""
+            }));
+            return;
+        }
+
+        if (name === "destinationCountry") {
+            setFormData(prev => ({
+                ...prev,
+                destinationCountry: value,
+                destinationPort: ""
+            }));
+            return;
+        }
+
         setFormData((prev) => ({
             ...prev,
             [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
         }));
+    };
+
+    const handleExtracted = (data: ExtractedData) => {
+        const updatedFields: string[] = [];
+        const newFormData = { ...formData };
+
+        if (data.incoterm) {
+            newFormData.incoterm = data.incoterm;
+            updatedFields.push("incoterm");
+        }
+        if (data.cargoDescription) {
+            newFormData.cargoDescription = data.cargoDescription;
+            updatedFields.push("cargoDescription");
+        }
+        if (data.cargoNature) {
+            newFormData.cargoNature = data.cargoNature;
+            updatedFields.push("cargoNature");
+        }
+        if (data.packagingMethod) {
+            newFormData.packagingMethod = data.packagingMethod;
+            updatedFields.push("packagingMethod");
+        }
+        if (data.totalWeight) {
+            newFormData.totalWeight = data.totalWeight;
+            updatedFields.push("totalWeight");
+        }
+        if (data.weightUnit) {
+            newFormData.weightUnit = data.weightUnit;
+            updatedFields.push("weightUnit");
+        }
+        if (data.originCountry) {
+            newFormData.originCountry = data.originCountry;
+            updatedFields.push("originCountry");
+        }
+        if (data.originPort) {
+            newFormData.originPort = data.originPort;
+            updatedFields.push("originPort");
+        }
+        if (data.destinationCountry) {
+            newFormData.destinationCountry = data.destinationCountry;
+            updatedFields.push("destinationCountry");
+        }
+        if (data.destinationPort) {
+            newFormData.destinationPort = data.destinationPort;
+            updatedFields.push("destinationPort");
+        }
+        if (data.transportMode) {
+            newFormData.transportMode = data.transportMode;
+            updatedFields.push("transportMode");
+        }
+        if (data.dispatchDate) {
+            newFormData.dispatchDate = data.dispatchDate;
+            updatedFields.push("dispatchDate");
+        }
+        if (data.vesselName) {
+            newFormData.vesselName = data.vesselName;
+            updatedFields.push("vesselName");
+        }
+        if (data.carrierName) {
+            newFormData.carrierName = data.carrierName;
+            updatedFields.push("carrierName");
+        }
+        if (data.invoiceValue) {
+            newFormData.invoiceValue = data.invoiceValue;
+            updatedFields.push("invoiceValue");
+        }
+        if (data.currency) {
+            newFormData.currency = data.currency;
+            updatedFields.push("currency");
+        }
+
+        setFormData(newFormData);
+        setAiPrefilledFields(updatedFields);
+        toast.success("Document data applied!", {
+            description: `Auto-filled ${updatedFields.length} fields. Please review them.`,
+            duration: 4000,
+        });
+
+        setCurrentStep(1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const handleSkipUpload = () => {
+        setCurrentStep(1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const nextStep = () => {
@@ -151,21 +463,24 @@ export default function CreateOrderPage() {
 
     const validateCurrentStep = () => {
         switch (currentStep) {
-            case 0: // Insurable Interest
+            case 0: // Upload Document
+                return true;
+
+            case 1: // Insurable Interest
                 const capacityValid = formData.proposerCapacity !== "" &&
                     (formData.proposerCapacity !== "Other" || formData.proposerCapacityOther !== "");
                 const incotermValid = formData.incoterm !== "" &&
                     (formData.incoterm !== "Other" || formData.incotermOther !== "");
                 return capacityValid && incotermValid;
 
-            case 1: // Cargo Details
+            case 2: // Cargo Details
                 return formData.cargoNature !== "" &&
                     formData.packagingMethod !== "" &&
                     (formData.packagingMethod !== "Other" || formData.packagingMethodOther !== "") &&
                     formData.totalWeight !== "" &&
                     formData.cargoDescription !== "";
 
-            case 2: // Voyage Details
+            case 3: // Voyage Details
                 return formData.originCountry !== "" &&
                     formData.originPort !== "" &&
                     formData.destinationCountry !== "" &&
@@ -174,24 +489,23 @@ export default function CreateOrderPage() {
                     formData.dispatchDate !== "" &&
                     (!formData.transShipment || formData.transShipmentNote !== "");
 
-            case 3: // Conveyance Details
-                // Optional fields, always valid
+            case 4: // Conveyance Details
                 return true;
 
-            case 4: // Insurance & Value
+            case 5: // Insurance & Value
                 return formData.invoiceValue !== "" &&
                     formData.valuationBasis !== "" &&
                     (formData.valuationBasis !== "Other" || formData.valuationBasisOther !== "") &&
                     formData.sumInsured !== "" &&
+                    selectedInsurerId !== "" &&
                     formData.policyId !== "";
 
-            case 5: // Additional Info
+            case 6: // Additional Info
                 return (!formData.storageRequired || (formData.storageLocation !== "" && formData.storageDuration !== "")) &&
                     (!formData.claimsHistory || formData.claimsDetails !== "");
 
-            case 6: // Declaration
-                return formData.proposerName !== "" &&
-                    formData.acceptTerms;
+            case 7: // Declaration
+                return formData.proposerName !== "" && formData.acceptTerms;
 
             default:
                 return true;
@@ -210,6 +524,7 @@ export default function CreateOrderPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
+                    insurerCompanyId: selectedInsurerId,
                     totalWeight: `${formData.totalWeight} ${formData.weightUnit}`,
                     invoiceValue: parseFloat(formData.invoiceValue),
                     sumInsured: parseFloat(formData.sumInsured),
@@ -217,14 +532,41 @@ export default function CreateOrderPage() {
             });
 
             if (res.ok) {
-                router.push(`/dashboard/orders`);
+                const result = await res.json();
+                
+                // Store the response data for our premium modal
+                setSubmittedData({
+                    orderId: result.order?.id || "N/A",
+                    invoiceNumber: result.invoice?.invoiceNumber || "N/A",
+                    sumInsured: result.order?.sumInsured || parseFloat(formData.sumInsured || "0"),
+                    totalPremium: result.invoice?.amount || 0,
+                    currency: formData.currency || "TZS",
+                    insurerName: activeInsurer?.fullName || "Selected Insurer"
+                });
+                
+                setShowSuccessModal(true);
             } else {
-                const error = await res.json();
-                alert(error.error || "Failed to create order");
+                let errMsg = "An unexpected error occurred. Please try again.";
+                try {
+                    const error = await res.json();
+                    errMsg = error.error || error.message || errMsg;
+                } catch (e) {
+                    try {
+                        const errText = await res.text();
+                        errMsg = errText.substring(0, 100) || res.statusText || errMsg;
+                    } catch (_) {}
+                }
+                toast.error("Failed to Create Order", {
+                    description: errMsg,
+                    duration: 4000,
+                });
             }
         } catch (error) {
             console.error("Create order error:", error);
-            alert("Failed to create order");
+            toast.error("Failed to Create Order", {
+                description: "An unexpected error occurred. Please try again.",
+                duration: 4000,
+            });
         } finally {
             setLoading(false);
         }
@@ -232,59 +574,117 @@ export default function CreateOrderPage() {
 
     if (status === "loading") {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                <div className="text-center">
-                    <div className="relative w-16 h-16 mx-auto mb-4">
-                        <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-                        <div className="absolute inset-0 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
+            <div className="space-y-6 font-sans bg-transparent pb-12">
+                {/* Header with Glassmorphism skeleton */}
+                <div className="bg-white/80 border-b border-slate-200/60 p-4 sticky top-0 z-30 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Skeleton className="w-8 h-8 rounded-full" />
+                        <div className="space-y-1.5">
+                            <Skeleton className="h-5 w-40 rounded" />
+                            <Skeleton className="h-3 w-48 rounded" />
+                        </div>
                     </div>
-                    <p className="text-gray-600 font-medium">Loading...</p>
+                    <Skeleton className="h-6 w-20 rounded" />
+                </div>
+
+                {/* Horizontal Stepper skeleton */}
+                <div className="max-w-3xl mx-auto px-4 pt-6">
+                    <div className="flex items-center justify-between relative">
+                        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-100 -z-10" />
+                        {[1, 2, 3, 4].map((step) => (
+                            <div key={step} className="flex flex-col items-center gap-2 bg-transparent z-10">
+                                <Skeleton className="w-10 h-10 rounded-full" />
+                                <Skeleton className="h-3.5 w-16 rounded" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Form card container skeleton */}
+                <div className="max-w-3xl mx-auto px-4 mt-8">
+                    <div className="bg-white border border-slate-200/60 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+                        <div className="border-b border-slate-100 pb-5 space-y-2">
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="w-10 h-10 rounded-xl" />
+                                <Skeleton className="h-5 w-48 rounded" />
+                            </div>
+                            <Skeleton className="h-4 w-72 rounded" />
+                        </div>
+                        <div className="space-y-6">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="space-y-2">
+                                    <Skeleton className="h-3.5 w-24 rounded" />
+                                    <Skeleton className="h-10 w-full rounded-xl" />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-between items-center pt-6 border-t border-slate-100">
+                            <Skeleton className="h-10 w-24 rounded-xl" />
+                            <Skeleton className="h-10 w-28 rounded-xl" />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header - Mobile Optimized */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+        <div className="min-h-screen bg-slate-50/50 relative overflow-hidden font-sans pb-12 grainy-bg">
+            {/* Grid pattern overlay */}
+            <div className="absolute inset-0 grid-pattern pointer-events-none opacity-[0.3]" />
+            
+            {/* Background glowing blurred design layers */}
+            <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-brand-green/3 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-brand-blue/3 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Header with Glassmorphism */}
+            <div className="bg-white/70 backdrop-blur-md border-b border-slate-200/40 sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="flex items-center gap-4 min-w-0">
                             <button
                                 type="button"
                                 onClick={() => router.back()}
-                                className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
+                                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-50 hover:border-slate-350 active:scale-95 transition-all duration-200 flex-shrink-0 border border-slate-200/80 bg-white cursor-pointer shadow-sm"
                             >
-                                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                                <ArrowLeft className="w-4 h-4 text-slate-700" strokeWidth={2.5} />
                             </button>
                             <div className="min-w-0">
-                                <h1 className="text-sm sm:text-lg font-semibold text-gray-900 truncate">
+                                <h1 className="text-lg font-bold text-slate-900 tracking-tight truncate">
                                     Insurance Proposal Form
                                 </h1>
-                                <p className="text-xs text-gray-500">
-                                    Step {currentStep + 1} of {STEPS.length}
-                                </p>
+                                <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-green/70 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-green shadow-[0_0_8px_rgba(61,164,78,0.5)]"></span>
+                                    </span>
+                                    <span>Step {currentStep + 1} of {STEPS.length} &bull; {STEPS[currentStep].title}</span>
+                                </div>
                             </div>
                         </div>
-                        {/* Progress indicator on mobile */}
-                        <div className="flex-shrink-0 lg:hidden">
-                            <div className="text-xs font-medium text-brand-green">
-                                {Math.round(((currentStep + 1) / STEPS.length) * 100)}%
+                        {/* Progress indicator badge */}
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-sm">
+                                <span>Completion:</span>
+                                <span className="text-brand-green font-extrabold">{Math.round(((currentStep + 1) / STEPS.length) * 100)}%</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Main Content - Responsive Layout */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-                <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
-                    {/* Left Sidebar - Desktop Only, Horizontal on Mobile */}
-                    <div className="w-full lg:w-64 flex-shrink-0">
-                        {/* Desktop Progress Steps */}
-                        <div className="hidden lg:block lg:sticky lg:top-24">
-                            <h3 className="text-sm font-semibold text-gray-900 mb-6">Progress</h3>
+            {/* Main Content Layout - Stepper, Form, Live Estimate Sidebar */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    
+                    {/* Left Stepper Column (3 cols) */}
+                    <div className="lg:col-span-3 space-y-4">
+                        {/* Desktop Progress Stepper */}
+                        <div className="hidden lg:block bg-white/85 backdrop-blur-sm border border-slate-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-2xl p-5 sticky top-24 transition-all duration-300">
+                            <h3 className="text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-4 pb-2 border-b border-slate-100 flex items-center justify-between font-sans">
+                                <span>Sections Checklist</span>
+                                <span className="text-brand-green font-extrabold">{currentStep + 1}/{STEPS.length}</span>
+                            </h3>
                             <div className="space-y-1">
                                 {STEPS.map((step, index) => {
                                     const isCompleted = index < currentStep;
@@ -292,42 +692,44 @@ export default function CreateOrderPage() {
                                     const StepIcon = step.icon;
 
                                     return (
-                                        <div key={index}>
+                                        <div key={index} className="relative">
                                             <div className={cn(
-                                                "flex items-center gap-3 p-3 rounded-lg transition-all",
-                                                isCurrent ? "bg-brand-green/5" : "hover:bg-gray-50"
+                                                "flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 border",
+                                                isCurrent 
+                                                    ? "bg-brand-green/[0.03] shadow-[0_2px_8px_rgba(61,164,78,0.04)] border-brand-green/20 scale-[1.01]" 
+                                                    : "hover:bg-slate-50/50 border-transparent"
                                             )}>
                                                 <div className={cn(
-                                                    "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all",
+                                                    "w-8.5 h-8.5 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 border text-xs",
                                                     isCompleted
-                                                        ? "bg-brand-green text-white"
+                                                        ? "bg-brand-green border-brand-green text-white shadow-sm shadow-emerald-100/50"
                                                         : isCurrent
-                                                            ? "bg-brand-green text-white"
-                                                            : "bg-gray-100 text-gray-400"
+                                                            ? "bg-brand-green text-white shadow-[0_4px_12px_rgba(61,164,78,0.25)] border-brand-green"
+                                                            : "bg-slate-50 border-slate-200/80 text-slate-400"
                                                 )}>
                                                     {isCompleted ? (
-                                                        <Check className="w-4 h-4" strokeWidth={2.5} />
+                                                        <Check className="w-3.5 h-3.5 stroke-[3]" />
                                                     ) : (
-                                                        <StepIcon className="w-4 h-4" />
+                                                        <StepIcon className="w-3.5 h-3.5" />
                                                     )}
                                                 </div>
-                                                <div className="flex-1">
+                                                <div className="flex-1 min-w-0">
                                                     <p className={cn(
-                                                        "text-sm font-medium",
-                                                        isCurrent ? "text-brand-green" : isCompleted ? "text-gray-900" : "text-gray-400"
+                                                        "text-[9px] font-bold tracking-wider uppercase leading-none",
+                                                        isCurrent ? "text-brand-green" : isCompleted ? "text-slate-500" : "text-slate-400"
+                                                    )}>
+                                                        Step 0{index + 1}
+                                                    </p>
+                                                    <p className={cn(
+                                                        "text-xs font-bold truncate mt-1.5",
+                                                        isCurrent ? "text-slate-900 font-extrabold" : isCompleted ? "text-slate-600 font-semibold" : "text-slate-400"
                                                     )}>
                                                         {step.title}
                                                     </p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
                                                 </div>
                                             </div>
                                             {index < STEPS.length - 1 && (
-                                                <div className="ml-7 h-8 w-0.5 bg-gray-200">
-                                                    <div className={cn(
-                                                        "h-full w-full transition-all",
-                                                        index < currentStep ? "bg-brand-green" : "bg-transparent"
-                                                    )} />
-                                                </div>
+                                                <div className="ml-[17px] h-3.5 w-0.5 my-0.5 bg-slate-200/60 rounded-full" />
                                             )}
                                         </div>
                                     );
@@ -335,283 +737,559 @@ export default function CreateOrderPage() {
                             </div>
                         </div>
 
-                        {/* Mobile Progress Bar */}
-                        <div className="lg:hidden bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="text-sm font-medium text-gray-900">
+                        {/* Mobile Stepper Card */}
+                        <div className="lg:hidden bg-white rounded-2xl p-4 shadow-sm border border-slate-200/80">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-green">
+                                    Step {currentStep + 1} of {STEPS.length}
+                                </span>
+                                <span className="text-xs font-bold text-slate-800">
                                     {STEPS[currentStep].title}
                                 </span>
-                                <span className="text-xs text-gray-500">
-                                    {currentStep + 1}/{STEPS.length}
-                                </span>
                             </div>
-                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-slate-105 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-brand-green transition-all duration-300 ease-out"
+                                    className="h-full bg-brand-green transition-all duration-300 ease-out shadow-sm shadow-brand-green/20"
                                     style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
                                 />
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">{STEPS[currentStep].description}</p>
+                            <p className="text-xs text-slate-500 mt-2 font-medium">{STEPS[currentStep].description}</p>
                         </div>
                     </div>
 
-                    {/* Right Content Area */}
-                    <div className="flex-1 min-w-0">
-                        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
+                    {/* Middle Form Column (6 cols) */}
+                    <div className="lg:col-span-6 min-w-0 w-full">
+                        <div className="bg-white border border-slate-200/60 rounded-3xl shadow-[0_10px_35px_-10px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_45px_-10px_rgba(0,0,0,0.05)] p-6 sm:p-8 lg:p-10 transition-all duration-300">
                             <form onSubmit={handleSubmit}>
-                                {/* Step 0: Insurable Interest */}
+                                
+                                {/* Step 0: Document Upload */}
                                 {currentStep === 0 && (
-                                    <div>
-                                        <div className="mb-6 sm:mb-8">
-                                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
-                                                Insurable Interest
-                                            </h2>
-                                            <p className="text-sm sm:text-base text-gray-600">
-                                                Define your relationship to the cargo
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            {/* Capacity of Proposer */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Capacity of Proposer <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-                                                    {PROPOSER_CAPACITY.map((capacity) => (
-                                                        <button
-                                                            key={capacity}
-                                                            type="button"
-                                                            onClick={() => setFormData(prev => ({
-                                                                ...prev,
-                                                                proposerCapacity: capacity,
-                                                                proposerCapacityOther: capacity !== "Other" ? "" : prev.proposerCapacityOther
-                                                            }))}
-                                                            className={cn(
-                                                                "relative px-3 py-2.5 sm:py-3 rounded-lg border-2 transition-all text-sm font-medium",
-                                                                formData.proposerCapacity === capacity
-                                                                    ? "border-brand-green bg-brand-green/5 text-brand-green"
-                                                                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                                                            )}
-                                                        >
-                                                            {capacity}
-                                                            {formData.proposerCapacity === capacity && (
-                                                                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-green rounded-full flex items-center justify-center">
-                                                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                {formData.proposerCapacity === "Other" && (
-                                                    <input
-                                                        type="text"
-                                                        name="proposerCapacityOther"
-                                                        value={formData.proposerCapacityOther}
-                                                        onChange={handleChange}
-                                                        placeholder="Specify capacity"
-                                                        className="mt-3 w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                    />
-                                                )}
-                                            </div>
-
-                                            {/* Basis of Sales (Incoterms) */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Basis of Sales (Incoterms) <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-                                                    {INCOTERMS.map((term) => (
-                                                        <button
-                                                            key={term}
-                                                            type="button"
-                                                            onClick={() => setFormData(prev => ({
-                                                                ...prev,
-                                                                incoterm: term,
-                                                                incotermOther: term !== "Other" ? "" : prev.incotermOther
-                                                            }))}
-                                                            className={cn(
-                                                                "relative px-3 py-2.5 sm:py-3 rounded-lg border-2 transition-all text-sm font-medium",
-                                                                formData.incoterm === term
-                                                                    ? "border-brand-green bg-brand-green/5 text-brand-green"
-                                                                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                                                            )}
-                                                        >
-                                                            {term}
-                                                            {formData.incoterm === term && (
-                                                                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-green rounded-full flex items-center justify-center">
-                                                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                {formData.incoterm === "Other" && (
-                                                    <input
-                                                        type="text"
-                                                        name="incotermOther"
-                                                        value={formData.incotermOther}
-                                                        onChange={handleChange}
-                                                        placeholder="Specify Incoterm"
-                                                        className="mt-3 w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                    />
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Navigation */}
-                                        <div className="mt-6 sm:mt-8 flex justify-end">
-                                            <button
-                                                type="button"
-                                                onClick={nextStep}
-                                                disabled={!validateCurrentStep()}
-                                                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-brand-green text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2"
-                                            >
-                                                Continue
-                                                <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <DocumentUploadStep
+                                        onExtracted={handleExtracted}
+                                        onSkip={handleSkipUpload}
+                                    />
                                 )}
 
-                                {/* Step 1: Description of Goods */}
+                                {/* Step 1: Insurable Interest */}
                                 {currentStep === 1 && (
-                                    <div>
-                                        <div className="mb-6 sm:mb-8">
-                                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
+                                    <div className="space-y-8">
+                                        <div className="border-b border-slate-100 pb-5">
+                                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                                Insurable Interest
+                                             </h2>
+                                             <p className="text-sm font-medium text-slate-500 mt-1.5">
+                                                 Specify your legal relationship to the shipment goods to establish insurable capacity.
+                                             </p>
+                                         </div>
+
+                                         <div className="space-y-6">
+                                             {/* Capacity of Proposer */}
+                                             <div className="space-y-3">
+                                                 <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                     Capacity of Proposer <span className="text-rose-500">*</span>
+                                                 </label>
+                                                 <div className="relative">
+                                                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                     <select
+                                                         name="proposerCapacity"
+                                                         value={formData.proposerCapacity}
+                                                         onChange={(e) => {
+                                                             const val = e.target.value;
+                                                             setFormData(prev => ({
+                                                                 ...prev,
+                                                                 proposerCapacity: val,
+                                                                 proposerCapacityOther: val !== "Other" ? "" : prev.proposerCapacityOther
+                                                             }));
+                                                         }}
+                                                         required
+                                                         className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                     >
+                                                         <option value="">Select Capacity</option>
+                                                         {PROPOSER_CAPACITY.map((cap) => (
+                                                             <option key={cap.name} value={cap.name}>
+                                                                 {cap.name} ({cap.desc})
+                                                             </option>
+                                                         ))}
+                                                     </select>
+                                                 </div>
+                                                 {formData.proposerCapacity === "Other" && (
+                                                     <input
+                                                         type="text"
+                                                         name="proposerCapacityOther"
+                                                         value={formData.proposerCapacityOther}
+                                                         onChange={handleChange}
+                                                         placeholder="Specify proposer capacity details"
+                                                         className="mt-3 w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-450 text-sm shadow-inner"
+                                                     />
+                                                 )}
+                                             </div>
+
+                                             {/* Basis of Sales (Incoterms) */}
+                                             <HighlightedIfAi filled={aiPrefilledFields.includes("incoterm")}>
+                                                 <div className="space-y-3">
+                                                     <div className="flex items-center justify-between">
+                                                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                             Basis of Sales (Incoterms) <span className="text-rose-500">*</span>
+                                                         </label>
+                                                         {aiPrefilledFields.includes("incoterm") && <AiFilledBadge />}
+                                                     </div>
+                                                     <div className="relative">
+                                                         <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                         <select
+                                                             name="incoterm"
+                                                             value={formData.incoterm}
+                                                             onChange={(e) => {
+                                                                 const val = e.target.value;
+                                                                 setFormData(prev => ({
+                                                                     ...prev,
+                                                                     incoterm: val,
+                                                                     incotermOther: val !== "Other" ? "" : prev.incotermOther
+                                                                 }));
+                                                             }}
+                                                             required
+                                                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                         >
+                                                             <option value="">Select Incoterm</option>
+                                                             {INCOTERMS.map((term) => (
+                                                                 <option key={term.name} value={term.name}>
+                                                                     {term.name} - {term.desc}
+                                                                 </option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     {formData.incoterm === "Other" && (
+                                                         <input
+                                                             type="text"
+                                                             name="incotermOther"
+                                                             value={formData.incotermOther}
+                                                             onChange={handleChange}
+                                                             placeholder="Specify Incoterm details"
+                                                             className="mt-3 w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-400 text-sm shadow-inner"
+                                                         />
+                                                     )}
+                                                 </div>
+                                             </HighlightedIfAi>
+                                         </div>
+
+                                         {/* Navigation */}
+                                         <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                                             <button
+                                                 type="button"
+                                                 onClick={prevStep}
+                                                 className="px-5 py-3 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                                             >
+                                                 <ArrowLeft className="w-4 h-4" />
+                                                 Back
+                                             </button>
+                                             <button
+                                                 type="button"
+                                                 onClick={nextStep}
+                                                 disabled={!validateCurrentStep()}
+                                                 className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+                                             >
+                                                 Continue
+                                                 <ChevronRight className="w-4 h-4" />
+                                             </button>
+                                         </div>
+                                     </div>
+                                 )}
+
+                                {/* Step 2: Description of Goods */}
+                                {currentStep === 2 && (
+                                    <div className="space-y-8">
+                                        <div className="border-b border-slate-100 pb-5">
+                                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
                                                 Description of Goods
                                             </h2>
-                                            <p className="text-sm sm:text-base text-gray-600">
-                                                Tell us about your cargo
+                                            <p className="text-sm font-medium text-slate-500 mt-1.5">
+                                                Provide specific details regarding the cargo description, weight, and packaging methods.
                                             </p>
                                         </div>
 
                                         <div className="space-y-6">
                                             {/* Nature of Cargo */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Nature of Cargo <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-                                                    {CARGO_NATURE_OPTIONS.map((nature) => (
-                                                        <button
-                                                            key={nature}
-                                                            type="button"
-                                                            onClick={() => setFormData(prev => ({ ...prev, cargoNature: nature }))}
-                                                            className={cn(
-                                                                "relative px-3 py-2.5 sm:py-3 rounded-lg border-2 transition-all text-sm font-medium",
-                                                                formData.cargoNature === nature
-                                                                    ? "border-brand-green bg-brand-green/5 text-brand-green"
-                                                                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                                                            )}
+                                            <HighlightedIfAi filled={aiPrefilledFields.includes("cargoNature")}>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                            Nature of Cargo <span className="text-rose-500">*</span>
+                                                        </label>
+                                                        {aiPrefilledFields.includes("cargoNature") && <AiFilledBadge />}
+                                                    </div>
+                                                    <div className="relative">
+                                                        <Box className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                        <select
+                                                            name="cargoNature"
+                                                            value={formData.cargoNature}
+                                                            onChange={handleChange}
+                                                            required
+                                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
                                                         >
-                                                            {nature}
-                                                            {formData.cargoNature === nature && (
-                                                                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-green rounded-full flex items-center justify-center">
-                                                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                                            <option value="">Select Cargo Nature</option>
+                                                            {CARGO_NATURE_OPTIONS.map((nature) => (
+                                                                 <option key={nature.name} value={nature.name}>
+                                                                     {nature.name} - {nature.desc}
+                                                                 </option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                 </div>
+                                             </HighlightedIfAi>
+
+                                             {/* Packaging Method */}
+                                             <HighlightedIfAi filled={aiPrefilledFields.includes("packagingMethod")}>
+                                                 <div className="space-y-3">
+                                                     <div className="flex items-center justify-between">
+                                                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                             Packaging Method <span className="text-rose-500">*</span>
+                                                         </label>
+                                                         {aiPrefilledFields.includes("packagingMethod") && <AiFilledBadge />}
+                                                     </div>
+                                                     <div className="relative">
+                                                         <Warehouse className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                         <select
+                                                             name="packagingMethod"
+                                                             value={formData.packagingMethod}
+                                                             onChange={(e) => {
+                                                                 const val = e.target.value;
+                                                                 setFormData(prev => ({
+                                                                     ...prev,
+                                                                     packagingMethod: val,
+                                                                     packagingMethodOther: val !== "Other" ? "" : prev.packagingMethodOther
+                                                                 }));
+                                                             }}
+                                                             required
+                                                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                         >
+                                                             <option value="">Select Packaging Method</option>
+                                                             {PACKAGING_METHODS.map((method) => (
+                                                                 <option key={method.name} value={method.name}>
+                                                                     {method.name} - {method.desc}
+                                                                 </option>
+                                                             ))}
+                                                         </select>
+                                                     </div>
+                                                     {formData.packagingMethod === "Other" && (
+                                                         <input
+                                                             type="text"
+                                                             name="packagingMethodOther"
+                                                             value={formData.packagingMethodOther}
+                                                             onChange={handleChange}
+                                                             placeholder="Specify packaging method details"
+                                                             className="mt-3 w-full px-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-400 text-sm shadow-inner"
+                                                         />
+                                                     )}
+                                                 </div>
+                                             </HighlightedIfAi>
+
+                                             {/* Total Weight & Quantity */}
+                                             <HighlightedIfAi filled={aiPrefilledFields.includes("totalWeight") || aiPrefilledFields.includes("weightUnit")}>
+                                                 <div className="space-y-3">
+                                                     <div className="flex items-center justify-between">
+                                                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                             Total Gross Weight <span className="text-rose-500">*</span>
+                                                         </label>
+                                                         {(aiPrefilledFields.includes("totalWeight") || aiPrefilledFields.includes("weightUnit")) && <AiFilledBadge />}
+                                                     </div>
+                                                     <div className="flex gap-2">
+                                                         <div className="flex-1">
+                                                             <input
+                                                                 type="number"
+                                                                 name="totalWeight"
+                                                                 value={formData.totalWeight}
+                                                                 onChange={handleChange}
+                                                                 required
+                                                                 placeholder="0.00"
+                                                                 className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-400 text-sm shadow-inner"
+                                                             />
+                                                         </div>
+                                                         <div className="w-28">
+                                                             <select
+                                                                 name="weightUnit"
+                                                                 value={formData.weightUnit}
+                                                                 onChange={handleChange}
+                                                                 className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                             >
+                                                                 <option value="KG">KG</option>
+                                                                 <option value="TONS">TONS</option>
+                                                             </select>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                             </HighlightedIfAi>
+
+                                             {/* Detailed Description */}
+                                             <HighlightedIfAi filled={aiPrefilledFields.includes("cargoDescription")}>
+                                                 <div className="space-y-3">
+                                                     <div className="flex items-center justify-between">
+                                                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                             Detailed Cargo Description <span className="text-rose-500">*</span>
+                                                         </label>
+                                                         {aiPrefilledFields.includes("cargoDescription") && <AiFilledBadge />}
+                                                     </div>
+                                                     <textarea
+                                                         name="cargoDescription"
+                                                         value={formData.cargoDescription}
+                                                         onChange={handleChange}
+                                                         rows={4}
+                                                         required
+                                                         placeholder="Provide detailed description of the cargo (e.g. 500 bags of grade-1 basmati rice, electronics, mechanical components...)"
+                                                         className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-400 text-sm shadow-inner resize-none leading-relaxed"
+                                                     />
+                                                 </div>
+                                             </HighlightedIfAi>
+                                         </div>
+
+                                         {/* Navigation */}
+                                         <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                                             <button
+                                                 type="button"
+                                                 onClick={prevStep}
+                                                 className="px-5 py-3 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                                             >
+                                                 <ArrowLeft className="w-4 h-4" />
+                                                 Back
+                                             </button>
+                                             <button
+                                                 type="button"
+                                                 onClick={nextStep}
+                                                 disabled={!validateCurrentStep()}
+                                                 className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+                                             >
+                                                 Continue
+                                                 <ChevronRight className="w-4 h-4" />
+                                             </button>
+                                         </div>
+                                     </div>
+                                 )}
+
+                                {/* Step 3: Voyage Details */}
+                                {currentStep === 3 && (
+                                    <div className="space-y-8">
+                                        <div className="border-b border-slate-100 pb-5">
+                                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                                Voyage Details
+                                            </h2>
+                                            <p className="text-sm font-medium text-slate-500 mt-1.5">
+                                                Shipping route, conveyance mode, and transport timeframes.
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {/* Origin country/port */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <HighlightedIfAi filled={aiPrefilledFields.includes("originCountry")}>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                Country of Origin <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            {aiPrefilledFields.includes("originCountry") && <AiFilledBadge />}
+                                                        </div>
+                                                        <select
+                                                            name="originCountry"
+                                                            value={formData.originCountry}
+                                                            onChange={handleChange}
+                                                            required
+                                                            className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                        >
+                                                            <option value="" className="text-slate-400">Select Country</option>
+                                                            {countries.map((c) => (
+                                                                <option key={c.id} value={c.name}>
+                                                                    {c.name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </HighlightedIfAi>
+
+                                                <HighlightedIfAi filled={aiPrefilledFields.includes("originPort")}>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                Port of Origin <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            {aiPrefilledFields.includes("originPort") && <AiFilledBadge />}
+                                                        </div>
+                                                        <div className="relative">
+                                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                            <select
+                                                                name="originPort"
+                                                                value={formData.originPort}
+                                                                onChange={handleChange}
+                                                                required
+                                                                disabled={!formData.originCountry}
+                                                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"
+                                                            >
+                                                                <option value="" className="text-slate-400">Select Port</option>
+                                                                {filteredOriginPorts.map((p) => (
+                                                                    <option key={p.id} value={p.name}>
+                                                                        {p.name} ({p.code})
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </HighlightedIfAi>
                                             </div>
 
-                                            {/* Packaging Method */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Packaging Method <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                                                    {PACKAGING_METHODS.map((method) => (
-                                                        <button
-                                                            key={method}
-                                                            type="button"
-                                                            onClick={() => setFormData(prev => ({
+                                            {/* Destination country/port */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <HighlightedIfAi filled={aiPrefilledFields.includes("destinationCountry")}>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                Country of Destination <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            {aiPrefilledFields.includes("destinationCountry") && <AiFilledBadge />}
+                                                        </div>
+                                                        <select
+                                                            name="destinationCountry"
+                                                            value={formData.destinationCountry}
+                                                            onChange={handleChange}
+                                                            required
+                                                            className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                        >
+                                                            <option value="" className="text-slate-400">Select Country</option>
+                                                            {countries.map((c) => (
+                                                                <option key={c.id} value={c.name}>
+                                                                    {c.name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </HighlightedIfAi>
+
+                                                <HighlightedIfAi filled={aiPrefilledFields.includes("destinationPort")}>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                Port of Destination <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            {aiPrefilledFields.includes("destinationPort") && <AiFilledBadge />}
+                                                        </div>
+                                                        <div className="relative">
+                                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                            <select
+                                                                name="destinationPort"
+                                                                value={formData.destinationPort}
+                                                                onChange={handleChange}
+                                                                required
+                                                                disabled={!formData.destinationCountry}
+                                                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"
+                                                            >
+                                                                <option value="" className="text-slate-400">Select Port</option>
+                                                                {filteredDestPorts.map((p) => (
+                                                                    <option key={p.id} value={p.name}>
+                                                                        {p.name} ({p.code})
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </HighlightedIfAi>
+                                            </div>
+
+                                            {/* Mode of Transport */}
+                                            <HighlightedIfAi filled={aiPrefilledFields.includes("transportMode")}>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                            Mode of Transport <span className="text-rose-500">*</span>
+                                                        </label>
+                                                        {aiPrefilledFields.includes("transportMode") && <AiFilledBadge />}
+                                                    </div>
+                                                    <div className="relative">
+                                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                        <select
+                                                            name="transportMode"
+                                                            value={formData.transportMode}
+                                                            onChange={handleChange}
+                                                            required
+                                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                        >
+                                                            <option value="">Select Transport Mode</option>
+                                                            {TRANSPORT_MODES.map((mode) => (
+                                                                <option key={mode} value={mode}>
+                                                                    {mode}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </HighlightedIfAi>
+
+                                            {/* Expected Dispatch Date */}
+                                            <HighlightedIfAi filled={aiPrefilledFields.includes("dispatchDate")}>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                            Expected Dispatch Date <span className="text-rose-500">*</span>
+                                                        </label>
+                                                        {aiPrefilledFields.includes("dispatchDate") && <AiFilledBadge />}
+                                                    </div>
+                                                    <div className="relative">
+                                                        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-450 pointer-events-none" />
+                                                        <input
+                                                            type="date"
+                                                            name="dispatchDate"
+                                                            value={formData.dispatchDate}
+                                                            onChange={handleChange}
+                                                            required
+                                                            className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm shadow-inner"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </HighlightedIfAi>
+
+                                            {/* Transshipment involved */}
+                                            <div className="pt-2">
+                                                <div className="bg-slate-50/60 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
+                                                    <div className="flex items-start gap-3.5">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="transShipment"
+                                                            name="transShipment"
+                                                            checked={formData.transShipment}
+                                                            onChange={(e) => setFormData(prev => ({
                                                                 ...prev,
-                                                                packagingMethod: method,
-                                                                packagingMethodOther: method !== "Other" ? "" : prev.packagingMethodOther
+                                                                transShipment: e.target.checked,
+                                                                transShipmentNote: e.target.checked ? prev.transShipmentNote : ""
                                                             }))}
-                                                            className={cn(
-                                                                "relative px-3 py-2.5 sm:py-3 rounded-lg border-2 transition-all text-sm font-medium",
-                                                                formData.packagingMethod === method
-                                                                    ? "border-brand-green bg-brand-green/5 text-brand-green"
-                                                                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                                                            )}
-                                                        >
-                                                            {method}
-                                                            {formData.packagingMethod === method && (
-                                                                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-green rounded-full flex items-center justify-center">
-                                                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                                                </div>
-                                                            )}
-                                                        </button>
-                                                    ))}
+                                                            className="mt-1 w-4.5 h-4.5 text-brand-green border-slate-300 rounded focus:ring-brand-green cursor-pointer"
+                                                        />
+                                                        <label htmlFor="transShipment" className="flex-1 text-xs sm:text-sm text-slate-700 cursor-pointer font-bold leading-snug">
+                                                            Is Trans-shipment Involved?
+                                                            <p className="text-[10px] text-slate-400 font-medium mt-0.5">Check if the cargo will change vessels or carriers during transit.</p>
+                                                        </label>
+                                                    </div>
                                                 </div>
-                                                {formData.packagingMethod === "Other" && (
-                                                    <input
-                                                        type="text"
-                                                        name="packagingMethodOther"
-                                                        value={formData.packagingMethodOther}
-                                                        onChange={handleChange}
-                                                        placeholder="Specify packaging method"
-                                                        className="mt-3 w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                    />
+
+                                                {formData.transShipment && (
+                                                    <div className="mt-4 animate-in fade-in duration-250">
+                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                                                            Trans-shipment Port Details <span className="text-rose-500">*</span>
+                                                        </label>
+                                                        <textarea
+                                                            name="transShipmentNote"
+                                                            value={formData.transShipmentNote}
+                                                            onChange={handleChange}
+                                                            rows={2}
+                                                            required
+                                                            placeholder="Describe trans-shipment hubs, ports, or routing deviations..."
+                                                            className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-400 text-sm shadow-inner resize-none leading-relaxed"
+                                                        />
+                                                    </div>
                                                 )}
-                                            </div>
-
-                                            {/* Total Weight/Quantity */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Total Weight/Quantity <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="flex gap-2 sm:gap-3">
-                                                    <input
-                                                        type="number"
-                                                        name="totalWeight"
-                                                        value={formData.totalWeight}
-                                                        onChange={handleChange}
-                                                        required
-                                                        step="0.01"
-                                                        placeholder="2500"
-                                                        className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                    />
-                                                    <select
-                                                        name="weightUnit"
-                                                        value={formData.weightUnit}
-                                                        onChange={handleChange}
-                                                        className="w-20 sm:w-24 px-2 sm:px-3 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900 font-medium text-sm"
-                                                    >
-                                                        <option value="KG">KG</option>
-                                                        <option value="MT">MT</option>
-                                                        <option value="LBS">LBS</option>
-                                                        <option value="CBM">CBM</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            {/* Description of Cargo */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Description of Cargo <span className="text-red-500">*</span>
-                                                </label>
-                                                <textarea
-                                                    name="cargoDescription"
-                                                    value={formData.cargoDescription}
-                                                    onChange={handleChange}
-                                                    required
-                                                    rows={4}
-                                                    placeholder="Provide a detailed description of your cargo including any special handling requirements..."
-                                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900 placeholder:text-gray-400 resize-none text-sm sm:text-base"
-                                                />
                                             </div>
                                         </div>
 
                                         {/* Navigation */}
-                                        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
                                             <button
                                                 type="button"
                                                 onClick={prevStep}
-                                                className="px-6 py-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 order-2 sm:order-1"
+                                                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                                             >
                                                 <ArrowLeft className="w-4 h-4" />
                                                 Back
@@ -620,7 +1298,7 @@ export default function CreateOrderPage() {
                                                 type="button"
                                                 onClick={nextStep}
                                                 disabled={!validateCurrentStep()}
-                                                className="px-6 sm:px-8 py-3 bg-brand-green text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 order-1 sm:order-2"
+                                                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
                                             >
                                                 Continue
                                                 <ChevronRight className="w-4 h-4" />
@@ -629,135 +1307,135 @@ export default function CreateOrderPage() {
                                     </div>
                                 )}
 
-                                {/* Step 2: Voyage Details */}
-                                {currentStep === 2 && (
-                                    <div>
-                                        <div className="mb-6 sm:mb-8">
-                                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
-                                                Voyage Details
+                                {/* Step 4: Conveyance Details */}
+                                {currentStep === 4 && (
+                                    <div className="space-y-8">
+                                        <div className="border-b border-slate-100 pb-5">
+                                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                                Conveyance Details
                                             </h2>
-                                            <p className="text-sm sm:text-base text-gray-600">
-                                                Shipping route and transport information
+                                            <p className="text-sm font-medium text-slate-500 mt-1.5">
+                                                Specify vessel names or carrier identifiers for customs clearance (optional).
                                             </p>
                                         </div>
 
                                         <div className="space-y-6">
-                                            {/* Origin */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Country of Origin <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        name="originCountry"
-                                                        value={formData.originCountry}
-                                                        onChange={handleChange}
-                                                        placeholder="e.g., China"
-                                                        required
-                                                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Port of Origin <span className="text-red-500">*</span>
-                                                    </label>
+                                            <HighlightedIfAi filled={aiPrefilledFields.includes("vesselName")}>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                            Vessel Name
+                                                        </label>
+                                                        {aiPrefilledFields.includes("vesselName") && <AiFilledBadge />}
+                                                    </div>
                                                     <div className="relative">
-                                                        <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                                        <Ship className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                                         <input
                                                             type="text"
-                                                            name="originPort"
-                                                            value={formData.originPort}
+                                                            name="vesselName"
+                                                            value={formData.vesselName}
                                                             onChange={handleChange}
-                                                            placeholder="e.g., Shanghai Port"
-                                                            required
-                                                            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
+                                                            placeholder="e.g. MV Ever Given"
+                                                            className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm shadow-sm"
                                                         />
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </HighlightedIfAi>
 
-                                            {/* Destination */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Country of Destination <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        name="destinationCountry"
-                                                        value={formData.destinationCountry}
-                                                        onChange={handleChange}
-                                                        placeholder="e.g., Tanzania"
-                                                        required
-                                                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Port of Destination <span className="text-red-500">*</span>
-                                                    </label>
+                                            <HighlightedIfAi filled={aiPrefilledFields.includes("carrierName")}>
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                            Carrier / Shipping Line Name
+                                                        </label>
+                                                        {aiPrefilledFields.includes("carrierName") && <AiFilledBadge />}
+                                                    </div>
                                                     <div className="relative">
-                                                        <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                                        <Package className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                                         <input
                                                             type="text"
-                                                            name="destinationPort"
-                                                            value={formData.destinationPort}
+                                                            name="carrierName"
+                                                            value={formData.carrierName}
                                                             onChange={handleChange}
-                                                            placeholder="e.g., Dar es Salaam Port"
-                                                            required
-                                                            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
+                                                            placeholder="e.g. Maersk, MSC, Ocean Network Express"
+                                                            className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm shadow-sm"
                                                         />
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </HighlightedIfAi>
+                                        </div>
 
-                                            {/* Mode of Transport */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                                    Mode of Transport <span className="text-red-500">*</span>
+                                        {/* Navigation */}
+                                        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={prevStep}
+                                                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                                            >
+                                                <ArrowLeft className="w-4 h-4" />
+                                                Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={nextStep}
+                                                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-600 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+                                            >
+                                                Continue
+                                                <ChevronRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Step 5: Insurance Cover & Valuation */}
+                                {currentStep === 5 && (
+                                    <div className="space-y-8">
+                                        <div className="border-b border-slate-100 pb-5">
+                                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                                Insurance & Valuation
+                                            </h2>
+                                            <p className="text-sm font-medium text-slate-500 mt-1.5">
+                                                Select active insurers, policies, and specify shipment valuations.
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {/* Insurer Selection */}
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                    Select Insurer Company <span className="text-rose-500">*</span>
                                                 </label>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-                                                    {TRANSPORT_MODES.map((mode) => {
-                                                        const icons: Record<string, any> = {
-                                                            Sea: Ship,
-                                                            Air: Plane,
-                                                            Road: Truck,
-                                                            Rail: Package,
-                                                            Multimodal: Globe
-                                                        };
-                                                        const Icon = icons[mode];
-
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                    {insurers.map((insurer) => {
+                                                        const active = selectedInsurerId === insurer.id;
                                                         return (
                                                             <button
-                                                                key={mode}
+                                                                key={insurer.id}
                                                                 type="button"
-                                                                onClick={() => setFormData(prev => ({ ...prev, transportMode: mode }))}
+                                                                onClick={() => {
+                                                                    setFormData(prev => ({ ...prev, policyId: "" })); // reset policy
+                                                                    setSelectedInsurerId(insurer.id);
+                                                                }}
                                                                 className={cn(
-                                                                    "relative p-3 sm:p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 text-center",
-                                                                    formData.transportMode === mode
-                                                                        ? "border-brand-green bg-brand-green/5"
-                                                                        : "border-gray-200 bg-white hover:border-gray-300"
+                                                                    "relative p-4 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-3 text-center cursor-pointer bg-slate-50/50 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-sm",
+                                                                    active && "border-brand-blue bg-blue-50/5 text-brand-blue ring-1 ring-brand-blue/10 shadow-sm"
                                                                 )}
                                                             >
-                                                                <div className={cn(
-                                                                    "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all",
-                                                                    formData.transportMode === mode
-                                                                        ? "bg-brand-green text-white"
-                                                                        : "bg-gray-100 text-gray-600"
-                                                                )}>
-                                                                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                                                                <div className="w-10 h-10 rounded-xl bg-slate-100 border border-slate-250 flex items-center justify-center font-bold text-slate-500 overflow-hidden shadow-inner flex-shrink-0">
+                                                                    {insurer.logoUrl ? (
+                                                                        <img src={insurer.logoUrl} alt={insurer.fullName} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        insurer.fullName?.substring(0, 2).toUpperCase()
+                                                                    )}
                                                                 </div>
                                                                 <span className={cn(
-                                                                    "text-xs sm:text-sm font-medium",
-                                                                    formData.transportMode === mode ? "text-brand-green" : "text-gray-700"
+                                                                    "text-xs font-bold leading-tight line-clamp-2",
+                                                                    active ? "text-brand-blue" : "text-slate-800"
                                                                 )}>
-                                                                    {mode}
+                                                                    {insurer.fullName || "Insurer"}
                                                                 </span>
-                                                                {formData.transportMode === mode && (
-                                                                    <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-green rounded-full flex items-center justify-center">
-                                                                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                                                    </div>
+                                                                {active && (
+                                                                    <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-brand-blue shadow-[0_0_8px_rgba(30,135,209,0.6)]" />
                                                                 )}
                                                             </button>
                                                         );
@@ -765,53 +1443,298 @@ export default function CreateOrderPage() {
                                                 </div>
                                             </div>
 
-                                            {/* Expected Date of Dispatch */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Expected Date of Dispatch <span className="text-red-500">*</span>
-                                                </label>
-                                                <div className="relative">
-                                                    <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                                                    <input
-                                                        type="date"
-                                                        name="dispatchDate"
-                                                        value={formData.dispatchDate}
+                                            {/* Policy Selection */}
+                                            {selectedInsurerId && (
+                                                <div className="space-y-3 animate-in fade-in duration-250">
+                                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                        Select Insurance Policy <span className="text-rose-500">*</span>
+                                                    </label>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                                        {policies.filter(p => p.insurer?.id === selectedInsurerId).map((policy) => {
+                                                            const active = formData.policyId === policy.id;
+                                                            return (
+                                                                <button
+                                                                    key={policy.id}
+                                                                    type="button"
+                                                                    onClick={() => setFormData(prev => ({
+                                                                        ...prev,
+                                                                        policyId: policy.id,
+                                                                        coverType: policy.clauseType,
+                                                                        valuationBasis: policy.valuationBasis || prev.valuationBasis
+                                                                    }))}
+                                                                    className={cn(
+                                                                        "relative p-4 rounded-2xl border transition-all duration-300 text-left cursor-pointer bg-slate-50/60 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-md flex flex-col justify-between min-h-[110px]",
+                                                                        active && "border-brand-green bg-brand-green/5 ring-1 ring-brand-green/10"
+                                                                    )}
+                                                                >
+                                                                    <div className="flex items-start gap-3 mb-2">
+                                                                        <div className={cn(
+                                                                            "w-8.5 h-8.5 rounded-lg flex items-center justify-center flex-shrink-0 border",
+                                                                            active 
+                                                                                ? "bg-brand-green border-brand-green text-white shadow-sm"
+                                                                                : "bg-slate-100 border-slate-200 text-slate-500"
+                                                                        )}>
+                                                                            <Shield className="w-4 h-4" />
+                                                                        </div>
+                                                                        <div className="min-w-0">
+                                                                            <h4 className={cn(
+                                                                                "text-xs font-bold leading-snug",
+                                                                                active ? "text-brand-green font-extrabold" : "text-slate-900"
+                                                                            )}>
+                                                                                {policy.name}
+                                                                            </h4>
+                                                                            <span className="inline-block text-[9px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded mt-1">
+                                                                                {policy.clauseType}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold border-t border-slate-100 pt-2 mt-2">
+                                                                        <span>Premium Rate:</span>
+                                                                        <span className="text-slate-700">{policy.rate}%</span>
+                                                                    </div>
+                                                                    {active && (
+                                                                        <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-brand-green" />
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Value inputs */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-5">
+                                                <HighlightedIfAi filled={aiPrefilledFields.includes("invoiceValue") || aiPrefilledFields.includes("currency")}>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between">
+                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                Cargo Invoice Value <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            {(aiPrefilledFields.includes("invoiceValue") || aiPrefilledFields.includes("currency")) && <AiFilledBadge />}
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <div className="flex-1 relative">
+                                                                <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                                                <input
+                                                                    type="number"
+                                                                    name="invoiceValue"
+                                                                    value={formData.invoiceValue}
+                                                                    onChange={handleChange}
+                                                                    required
+                                                                    placeholder="0.00"
+                                                                    className="w-full pl-9 pr-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm shadow-inner"
+                                                                />
+                                                            </div>
+                                                            <div className="w-24">
+                                                                <select
+                                                                    name="currency"
+                                                                    value={formData.currency}
+                                                                    onChange={handleChange}
+                                                                    className="w-full px-3 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                                >
+                                                                    <option value="TZS">TZS</option>
+                                                                    <option value="USD">USD</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </HighlightedIfAi>
+
+                                                <div className="space-y-3">
+                                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                        Valuation Basis <span className="text-rose-500">*</span>
+                                                    </label>
+                                                    <select
+                                                        name="valuationBasis"
+                                                        value={formData.valuationBasis}
                                                         onChange={handleChange}
-                                                        required
-                                                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                    />
+                                                        className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                    >
+                                                        {VALUATION_BASIS.map((basis) => (
+                                                            <option key={basis.name} value={basis.name}>
+                                                                {basis.name} - {basis.name === "CIF" ? "Invoice + 10%" : "Base Invoice"}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                 </div>
                                             </div>
 
-                                            {/* Trans-Shipment */}
-                                            <div className="bg-gray-50 rounded-lg p-4 sm:p-5 border border-gray-200">
-                                                <div className="flex items-start gap-3">
-                                                    <input
-                                                        type="checkbox"
-                                                        id="transShipment"
-                                                        name="transShipment"
-                                                        checked={formData.transShipment}
-                                                        onChange={(e) => setFormData(prev => ({
-                                                            ...prev,
-                                                            transShipment: e.target.checked,
-                                                            transShipmentNote: e.target.checked ? prev.transShipmentNote : ""
-                                                        }))}
-                                                        className="mt-1 w-5 h-5 text-brand-green border-gray-300 rounded focus:ring-brand-green focus:ring-2"
-                                                    />
-                                                    <label htmlFor="transShipment" className="flex-1 text-sm text-gray-700 cursor-pointer">
-                                                        <span className="font-semibold text-gray-900">Trans-Shipment Involved?</span>
-                                                        <p className="text-xs text-gray-500 mt-1">Check if cargo will be transferred between vessels/vehicles</p>
-                                                    </label>
+                                            {/* Sum Insured Result */}
+                                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 flex items-center justify-between">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-brand-green shadow-sm">
+                                                        <ShieldCheck className="w-4.5 h-4.5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider leading-none">Calculated Sum Insured</p>
+                                                        <p className="text-xs text-slate-500 font-medium mt-1">Automatic assessment based on valuation basis</p>
+                                                    </div>
                                                 </div>
-                                                {formData.transShipment && (
-                                                    <div className="mt-4">
+                                                <div className="text-right">
+                                                    <span className="text-xs font-bold text-slate-550 mr-1">Tsh</span>
+                                                    <span className="text-sm font-black text-slate-850">
+                                                        {formData.sumInsured ? parseFloat(formData.sumInsured).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Additional Covers Info */}
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                    Additional Covers Required
+                                                </label>
+                                                <textarea
+                                                    name="additionalCovers"
+                                                    value={formData.additionalCovers}
+                                                    onChange={handleChange}
+                                                    rows={3}
+                                                    placeholder="e.g. War & Strikes risks (SRCC), Theft, Pilferage & Non-Delivery (TPND)..."
+                                                    className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm resize-none placeholder-slate-400 leading-relaxed"
+                                                />
+                                                <p className="text-[9px] text-slate-400 font-bold">Optional: Specify custom cover extensions.</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Navigation */}
+                                        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={prevStep}
+                                                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                                            >
+                                                <ArrowLeft className="w-4 h-4" />
+                                                Back
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={nextStep}
+                                                disabled={!validateCurrentStep()}
+                                                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
+                                            >
+                                                Continue
+                                                <ChevronRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Step 6: Storage Details & Claims History */}
+                                {currentStep === 6 && (
+                                    <div className="space-y-8">
+                                        <div className="border-b border-slate-100 pb-5">
+                                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                                Additional Risk Information
+                                            </h2>
+                                            <p className="text-sm font-medium text-slate-500 mt-1.5">
+                                                Transit warehouse storage details and previous claims records.
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {/* G. Storage Details */}
+                                            <div className="space-y-4">
+                                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                    Storage Details
+                                                </h3>
+                                                
+                                                <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
+                                                    <div className="flex items-start gap-3.5">
                                                         <input
-                                                            type="text"
-                                                            name="transShipmentNote"
-                                                            value={formData.transShipmentNote}
+                                                            type="checkbox"
+                                                            id="storageRequired"
+                                                            name="storageRequired"
+                                                            checked={formData.storageRequired}
+                                                            onChange={(e) => setFormData(prev => ({
+                                                                ...prev,
+                                                                storageRequired: e.target.checked,
+                                                                storageLocation: e.target.checked ? prev.storageLocation : "",
+                                                                storageDuration: e.target.checked ? prev.storageDuration : ""
+                                                            }))}
+                                                            className="mt-1 w-4.5 h-4.5 text-brand-green border-slate-300 rounded focus:ring-brand-green cursor-pointer flex-shrink-0"
+                                                        />
+                                                        <label htmlFor="storageRequired" className="flex-1 text-xs sm:text-sm text-slate-700 cursor-pointer font-bold leading-normal">
+                                                            Storage Before or After Transit?
+                                                            <p className="text-[10px] text-slate-405 font-medium mt-0.5">Check if the cargo will undergo storage in custom warehouses or facilities outside the transit voyage.</p>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                {formData.storageRequired && (
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-0 sm:pl-7 animate-in fade-in duration-250">
+                                                        <div className="space-y-3">
+                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                Storage Location <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            <div className="relative">
+                                                                <Warehouse className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                                <input
+                                                                    type="text"
+                                                                    name="storageLocation"
+                                                                    value={formData.storageLocation}
+                                                                    onChange={handleChange}
+                                                                    placeholder="e.g. Dar es Salaam Port ICD"
+                                                                    className="w-full pl-10 pr-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                Storage Duration (Days) <span className="text-rose-500">*</span>
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                name="storageDuration"
+                                                                value={formData.storageDuration}
+                                                                onChange={handleChange}
+                                                                placeholder="e.g. 14 Days"
+                                                                className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* H. Claims History */}
+                                            <div className="pt-6 border-t border-slate-100 space-y-4">
+                                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                    Prior Claims History
+                                                </h3>
+
+                                                <div className="bg-slate-50/50 border border-slate-200/80 rounded-2xl p-4 sm:p-5">
+                                                    <div className="flex items-start gap-3.5">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="claimsHistory"
+                                                            name="claimsHistory"
+                                                            checked={formData.claimsHistory}
+                                                            onChange={(e) => setFormData(prev => ({
+                                                                ...prev,
+                                                                claimsHistory: e.target.checked,
+                                                                claimsDetails: e.target.checked ? prev.claimsDetails : ""
+                                                            }))}
+                                                            className="mt-1 w-4.5 h-4.5 text-brand-green border-slate-300 rounded focus:ring-brand-green cursor-pointer flex-shrink-0"
+                                                        />
+                                                        <label htmlFor="claimsHistory" className="flex-1 text-xs sm:text-sm text-slate-700 cursor-pointer font-bold leading-normal">
+                                                            Any prior marine cargo claims?
+                                                            <p className="text-[10px] text-slate-405 font-medium mt-0.5">Check if you have filed any shipping or transit claims in the past 3 years.</p>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                {formData.claimsHistory && (
+                                                    <div className="pl-0 sm:pl-7 animate-in fade-in duration-250 space-y-3">
+                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                            Describe Claims Details <span className="text-rose-500">*</span>
+                                                        </label>
+                                                        <textarea
+                                                            name="claimsDetails"
+                                                            value={formData.claimsDetails}
                                                             onChange={handleChange}
-                                                            placeholder="Specify trans-shipment details (location, vessel, etc.)"
-                                                            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900 text-sm"
+                                                            rows={2}
+                                                            required
+                                                            placeholder="Detail past claims: Date, Insurer, Claim amount, Cause of loss..."
+                                                            className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm resize-none placeholder-slate-400 leading-relaxed"
                                                         />
                                                     </div>
                                                 )}
@@ -819,11 +1742,11 @@ export default function CreateOrderPage() {
                                         </div>
 
                                         {/* Navigation */}
-                                        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
                                             <button
                                                 type="button"
                                                 onClick={prevStep}
-                                                className="px-6 py-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 order-2 sm:order-1"
+                                                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                                             >
                                                 <ArrowLeft className="w-4 h-4" />
                                                 Back
@@ -832,7 +1755,7 @@ export default function CreateOrderPage() {
                                                 type="button"
                                                 onClick={nextStep}
                                                 disabled={!validateCurrentStep()}
-                                                className="px-6 sm:px-8 py-3 bg-brand-green text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 order-1 sm:order-2"
+                                                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
                                             >
                                                 Continue
                                                 <ChevronRight className="w-4 h-4" />
@@ -841,541 +1764,92 @@ export default function CreateOrderPage() {
                                     </div>
                                 )}
 
-                                {/* Step 3: Conveyance Details */}
-                                {currentStep === 3 && (
-                                    <div>
-                                        <div className="mb-6 sm:mb-8">
-                                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
-                                                Conveyance Details
+                                {/* Step 7: Declaration Review & Submit */}
+                                {currentStep === 7 && (
+                                    <div className="space-y-8">
+                                        <div className="border-b border-slate-100 pb-5">
+                                            <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                                Review & Submit Proposal
                                             </h2>
-                                            <p className="text-sm sm:text-base text-gray-600">
-                                                Vessel, flight, or vehicle information
+                                            <p className="text-sm font-medium text-slate-500 mt-1.5">
+                                                Double-check the declarations and billing estimates before finalizing.
                                             </p>
                                         </div>
 
                                         <div className="space-y-6">
-                                            {/* Info Notice */}
-                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                                <div className="flex gap-3">
-                                                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                                                    <div>
-                                                        <p className="text-sm text-blue-900 font-medium">
-                                                            Optional Information
-                                                        </p>
-                                                        <p className="text-sm text-blue-700 mt-1">
-                                                            Provide vessel/carrier details if known. This can be updated later.
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Vessel/Flight/Truck Name */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    {formData.transportMode === "Sea" ? "Name of Vessel" :
-                                                        formData.transportMode === "Air" ? "Flight Number" :
-                                                            formData.transportMode === "Road" ? "Truck/Vehicle ID" :
-                                                                "Conveyance Name"}
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    name="vesselName"
-                                                    value={formData.vesselName}
-                                                    onChange={handleChange}
-                                                    placeholder={
-                                                        formData.transportMode === "Sea" ? "e.g., MSC APOLLINE" :
-                                                            formData.transportMode === "Air" ? "e.g., ET302" :
-                                                                formData.transportMode === "Road" ? "e.g., TZ-1234-ABC" :
-                                                                    "Enter if known"
-                                                    }
-                                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                />
-                                            </div>
-
-                                            {/* Shipping Line/Carrier Name */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    {formData.transportMode === "Sea" ? "Shipping Line Name" :
-                                                        formData.transportMode === "Air" ? "Airline Name" :
-                                                            "Carrier Name"}
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    name="carrierName"
-                                                    value={formData.carrierName}
-                                                    onChange={handleChange}
-                                                    placeholder={
-                                                        formData.transportMode === "Sea" ? "e.g., Maersk Line" :
-                                                            formData.transportMode === "Air" ? "e.g., Ethiopian Airlines" :
-                                                                "e.g., DHL, FedEx"
-                                                    }
-                                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Navigation */}
-                                        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={prevStep}
-                                                className="px-6 py-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 order-2 sm:order-1"
-                                            >
-                                                <ArrowLeft className="w-4 h-4" />
-                                                Back
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={nextStep}
-                                                disabled={!validateCurrentStep()}
-                                                className="px-6 sm:px-8 py-3 bg-brand-green text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 order-1 sm:order-2"
-                                            >
-                                                Continue
-                                                <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Step 4: Sum Insured & Insurance Cover */}
-                                {currentStep === 4 && (
-                                    <div>
-                                        <div className="mb-6 sm:mb-8">
-                                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
-                                                Insurance & Valuation
-                                            </h2>
-                                            <p className="text-sm sm:text-base text-gray-600">
-                                                Set cargo value and select coverage type
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-8">
-                                            {/* E. Sum Insured Section */}
-                                            <div>
-                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-                                                    Sum Insured
-                                                </h3>
-                                                <div className="space-y-4 sm:space-y-6">
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                            {/* Summary Docket Receipt */}
+                                            <div className="bg-slate-50 rounded-2xl border border-slate-200/80 p-5 relative overflow-hidden">
+                                                {/* Docket header info */}
+                                                <div className="flex items-start justify-between border-b border-slate-200 pb-4 mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 bg-brand-green text-white rounded-xl flex items-center justify-center shadow-md shadow-brand-green/10">
+                                                            <Receipt className="w-5 h-5" />
+                                                        </div>
                                                         <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Invoice Value <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <div className="relative">
-                                                                <DollarSign className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                                                                <input
-                                                                    type="number"
-                                                                    name="invoiceValue"
-                                                                    value={formData.invoiceValue}
-                                                                    onChange={handleChange}
-                                                                    required
-                                                                    step="0.01"
-                                                                    placeholder="0.00"
-                                                                    className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Currency <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <select
-                                                                name="currency"
-                                                                value={formData.currency}
-                                                                onChange={handleChange}
-                                                                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                            >
-                                                                <option value="TZS">TZS - Tanzanian Shilling</option>
-                                                                <option value="USD">USD - US Dollar</option>
-                                                                <option value="EUR">EUR - Euro</option>
-                                                            </select>
+                                                            <h3 className="text-sm font-bold text-slate-800">Proposal Summary Docket</h3>
+                                                            <p className="text-[10px] text-slate-400 font-bold mt-0.5">NIIS-T DIGITAL COVER APPLICATION</p>
                                                         </div>
                                                     </div>
-
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Basis of Valuation <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <div className="space-y-2">
-                                                                <div className="grid grid-cols-3 gap-2">
-                                                                    {VALUATION_BASIS.map((basis) => (
-                                                                        <button
-                                                                            key={basis}
-                                                                            type="button"
-                                                                            onClick={() => setFormData(prev => ({
-                                                                                ...prev,
-                                                                                valuationBasis: basis,
-                                                                                valuationBasisOther: basis !== "Other" ? "" : prev.valuationBasisOther
-                                                                            }))}
-                                                                            className={cn(
-                                                                                "relative px-3 py-2.5 rounded-lg border-2 transition-all text-sm font-medium",
-                                                                                formData.valuationBasis === basis
-                                                                                    ? "border-brand-green bg-brand-green/5 text-brand-green"
-                                                                                    : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-                                                                            )}
-                                                                        >
-                                                                            {basis}
-                                                                            {formData.valuationBasis === basis && (
-                                                                                <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-brand-green rounded-full flex items-center justify-center">
-                                                                                    <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                                                                </div>
-                                                                            )}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                                {formData.valuationBasis === "Other" && (
-                                                                    <input
-                                                                        type="text"
-                                                                        name="valuationBasisOther"
-                                                                        value={formData.valuationBasisOther}
-                                                                        onChange={handleChange}
-                                                                        placeholder="Specify basis"
-                                                                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                                    />
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Total Sum Insured <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <div className="relative">
-                                                                <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm pointer-events-none">
-                                                                    {formData.currency}
-                                                                </div>
-                                                                <input
-                                                                    type="number"
-                                                                    name="sumInsured"
-                                                                    value={formData.sumInsured}
-                                                                    onChange={handleChange}
-                                                                    required
-                                                                    step="0.01"
-                                                                    placeholder="0.00"
-                                                                    className="w-full pl-14 sm:pl-16 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                                />
-                                                            </div>
-                                                            <p className="mt-2 text-xs text-gray-500 flex items-center gap-1.5">
-                                                                <Info className="w-3.5 h-3.5 flex-shrink-0" />
-                                                                Typically 110% of invoice value
-                                                            </p>
-                                                        </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[9px] text-slate-400 font-bold uppercase">Date Created</p>
+                                                        <p className="text-xs text-slate-600 font-bold mt-0.5">{formData.declarationDate || "Today"}</p>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            {/* F. Insurance Cover Required */}
-                                            <div className="pt-6 border-t border-gray-200">
-                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-                                                    Insurance Cover Required
-                                                </h3>
-                                                <div className="space-y-6">
-                                                    {/* Type of Cover */}
+                                                {/* Docket Grid Details */}
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-3">
-                                                            Select Insurance Policy <span className="text-red-500">*</span>
-                                                        </label>
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                                            {policies.map((policy) => (
-                                                                <button
-                                                                    key={policy.id}
-                                                                    type="button"
-                                                                    onClick={() => setFormData(prev => ({
-                                                                        ...prev,
-                                                                        policyId: policy.id,
-                                                                        coverType: policy.clauseType // Keep for display/logic if needed, or remove if redundant
-                                                                    }))}
-                                                                    className={cn(
-                                                                        "relative p-4 sm:p-5 rounded-lg border-2 transition-all text-left h-full flex flex-col",
-                                                                        formData.policyId === policy.id
-                                                                            ? "border-brand-green bg-brand-green/5"
-                                                                            : "border-gray-200 bg-white hover:border-gray-300"
-                                                                    )}
-                                                                >
-                                                                    <div className="flex items-start gap-3 sm:gap-4 mb-2">
-                                                                        <div className={cn(
-                                                                            "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all",
-                                                                            formData.policyId === policy.id
-                                                                                ? "bg-brand-green text-white"
-                                                                                : "bg-gray-100 text-gray-500"
-                                                                        )}>
-                                                                            <Shield className="w-5 h-5 sm:w-6 sm:h-6" />
-                                                                        </div>
-                                                                        <div className="flex-1 min-w-0">
-                                                                            <h4 className={cn(
-                                                                                "text-sm sm:text-base font-semibold mb-1",
-                                                                                formData.policyId === policy.id ? "text-brand-green" : "text-gray-900"
-                                                                            )}>
-                                                                                {policy.name}
-                                                                            </h4>
-                                                                            <p className="text-xs sm:text-sm text-gray-500 font-medium">
-                                                                                {policy.clauseType}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <p className="text-xs text-gray-600 line-clamp-3 mt-auto">
-                                                                        {policy.description}
-                                                                    </p>
-
-                                                                    {formData.policyId === policy.id && (
-                                                                        <div className="absolute top-3 right-3 w-6 h-6 bg-brand-green rounded-full flex items-center justify-center">
-                                                                            <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
-                                                                        </div>
-                                                                    )}
-                                                                </button>
-                                                            ))}
-                                                        </div>
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Declarant Name</span>
+                                                        <p className="font-extrabold text-slate-700 mt-0.5">{formData.proposerName || "Not Provided"}</p>
                                                     </div>
-
-                                                    {/* Additional Covers */}
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                            Additional Covers
-                                                        </label>
-                                                        <textarea
-                                                            name="additionalCovers"
-                                                            value={formData.additionalCovers}
-                                                            onChange={handleChange}
-                                                            rows={3}
-                                                            placeholder="e.g., War risks, Strikes, Riots, Civil Commotions (SRCC), Theft, Pilferage & Non-Delivery (TPND)..."
-                                                            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900 placeholder:text-gray-400 resize-none text-sm sm:text-base"
-                                                        />
-                                                        <p className="mt-1 text-xs text-gray-500">Optional: Specify any additional coverage requirements</p>
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Capacity / Incoterm</span>
+                                                        <p className="font-extrabold text-slate-700 mt-0.5">{formData.proposerCapacity || "Owner"} ({formData.incoterm || "CIF"})</p>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Navigation */}
-                                        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={prevStep}
-                                                className="px-6 py-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 order-2 sm:order-1"
-                                            >
-                                                <ArrowLeft className="w-4 h-4" />
-                                                Back
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={nextStep}
-                                                disabled={!validateCurrentStep()}
-                                                className="px-6 sm:px-8 py-3 bg-brand-green text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 order-1 sm:order-2"
-                                            >
-                                                Continue
-                                                <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Step 5: Storage & Claims History */}
-                                {currentStep === 5 && (
-                                    <div>
-                                        <div className="mb-6 sm:mb-8">
-                                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
-                                                Additional Information
-                                            </h2>
-                                            <p className="text-sm sm:text-base text-gray-600">
-                                                Storage requirements and claims history
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-8">
-                                            {/* G. Storage Details */}
-                                            <div>
-                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-                                                    Storage Details
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    <div className="bg-gray-50 rounded-lg p-4 sm:p-5 border border-gray-200">
-                                                        <div className="flex items-start gap-3">
-                                                            <input
-                                                                type="checkbox"
-                                                                id="storageRequired"
-                                                                name="storageRequired"
-                                                                checked={formData.storageRequired}
-                                                                onChange={(e) => setFormData(prev => ({
-                                                                    ...prev,
-                                                                    storageRequired: e.target.checked,
-                                                                    storageLocation: e.target.checked ? prev.storageLocation : "",
-                                                                    storageDuration: e.target.checked ? prev.storageDuration : ""
-                                                                }))}
-                                                                className="mt-1 w-5 h-5 text-brand-green border-gray-300 rounded focus:ring-brand-green focus:ring-2"
-                                                            />
-                                                            <label htmlFor="storageRequired" className="flex-1 text-sm text-gray-700 cursor-pointer">
-                                                                <span className="font-semibold text-gray-900">Storage Before/After Transit?</span>
-                                                                <p className="text-xs text-gray-500 mt-1">Check if cargo will be stored in a warehouse</p>
-                                                            </label>
-                                                        </div>
+                                                    <div>
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Cargo & Packaging</span>
+                                                        <p className="font-extrabold text-slate-700 mt-0.5">{formData.cargoNature || "General"} &bull; {formData.packagingMethod || "Cartons"}</p>
                                                     </div>
-
-                                                    {formData.storageRequired && (
-                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pl-0 sm:pl-8">
-                                                            <div>
-                                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                    Storage Location <span className="text-red-500">*</span>
-                                                                </label>
-                                                                <div className="relative">
-                                                                    <Warehouse className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                                                                    <input
-                                                                        type="text"
-                                                                        name="storageLocation"
-                                                                        value={formData.storageLocation}
-                                                                        onChange={handleChange}
-                                                                        placeholder="e.g., Dar es Salaam Port Warehouse"
-                                                                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                                    />
-                                                                </div>
-                                                            </div>
-
-                                                            <div>
-                                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                    Storage Duration <span className="text-red-500">*</span>
-                                                                </label>
-                                                                <input
-                                                                    type="text"
-                                                                    name="storageDuration"
-                                                                    value={formData.storageDuration}
-                                                                    onChange={handleChange}
-                                                                    placeholder="e.g., 14 days, 2 weeks"
-                                                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* H. Claims History */}
-                                            <div className="pt-6 border-t border-gray-200">
-                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-                                                    Claims History
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    <div className="bg-amber-50 rounded-lg p-4 sm:p-5 border border-amber-200">
-                                                        <div className="flex items-start gap-3">
-                                                            <input
-                                                                type="checkbox"
-                                                                id="claimsHistory"
-                                                                name="claimsHistory"
-                                                                checked={formData.claimsHistory}
-                                                                onChange={(e) => setFormData(prev => ({
-                                                                    ...prev,
-                                                                    claimsHistory: e.target.checked,
-                                                                    claimsDetails: e.target.checked ? prev.claimsDetails : ""
-                                                                }))}
-                                                                className="mt-1 w-5 h-5 text-brand-green border-gray-300 rounded focus:ring-brand-green focus:ring-2"
-                                                            />
-                                                            <label htmlFor="claimsHistory" className="flex-1 text-sm text-gray-700 cursor-pointer">
-                                                                <span className="font-semibold text-gray-900">Any Marine Cargo Claims in the Past 5 Years?</span>
-                                                                <p className="text-xs text-gray-600 mt-1">Check if you have filed any previous claims</p>
-                                                            </label>
-                                                        </div>
+                                                    <div>
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Weight</span>
+                                                        <p className="font-extrabold text-slate-700 mt-0.5">{formData.totalWeight ? `${formData.totalWeight} ${formData.weightUnit}` : "—"}</p>
                                                     </div>
-
-                                                    {formData.claimsHistory && (
-                                                        <div className="pl-0 sm:pl-8">
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Claims Details <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <textarea
-                                                                name="claimsDetails"
-                                                                value={formData.claimsDetails}
-                                                                onChange={handleChange}
-                                                                rows={4}
-                                                                placeholder="Please provide details: date, nature of loss, claim amount, and outcome..."
-                                                                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900 placeholder:text-gray-400 resize-none text-sm sm:text-base"
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Navigation */}
-                                        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={prevStep}
-                                                className="px-6 py-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 order-2 sm:order-1"
-                                            >
-                                                <ArrowLeft className="w-4 h-4" />
-                                                Back
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={nextStep}
-                                                disabled={!validateCurrentStep()}
-                                                className="px-6 sm:px-8 py-3 bg-brand-green text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 order-1 sm:order-2"
-                                            >
-                                                Continue
-                                                <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Step 6: Declaration */}
-                                {currentStep === 6 && (
-                                    <div>
-                                        <div className="mb-6 sm:mb-8">
-                                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
-                                                Declaration
-                                            </h2>
-                                            <p className="text-sm sm:text-base text-gray-600">
-                                                Review and confirm your proposal
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            {/* Summary Card */}
-                                            <div className="bg-gradient-to-br from-brand-green/5 to-blue-50 rounded-lg sm:rounded-xl p-4 sm:p-6 border border-brand-green/20">
-                                                <div className="flex items-start gap-3 sm:gap-4 mb-4">
-                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-brand-green rounded-lg flex items-center justify-center flex-shrink-0">
-                                                        <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                                                            Ready to Submit
-                                                        </h3>
-                                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                                                            Please review your information and confirm
+                                                    <div className="sm:col-span-2 border-t border-slate-200/60 pt-3 mt-1">
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Transit Route</span>
+                                                        <p className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                                                            <span>{formData.originPort || "Origin Port"} ({formData.originCountry})</span>
+                                                            <span className="text-slate-400 font-medium">&rarr;</span>
+                                                            <span>{formData.destinationPort || "Destination Port"} ({formData.destinationCountry})</span>
                                                         </p>
                                                     </div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-                                                    <div>
-                                                        <p className="text-gray-600 text-xs">Cargo</p>
-                                                        <p className="font-medium text-gray-900">{formData.cargoNature || "—"}</p>
+                                                {/* Embedded Invoice calculations inside Docket */}
+                                                {liveEstimate && (
+                                                    <div className="mt-5 pt-4 border-t border-slate-200 bg-slate-100/50 -mx-5 -mb-5 px-5 py-4">
+                                                        <h4 className="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-2.5">Application Cost Estimate</h4>
+                                                        <div className="space-y-1.5 text-xs">
+                                                            <div className="flex justify-between text-slate-500 font-semibold">
+                                                                <span>Invoice Valuation:</span>
+                                                                <span>Tsh {parseFloat(formData.invoiceValue).toLocaleString()}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-slate-500 font-semibold">
+                                                                <span>Premium Rate:</span>
+                                                                <span>{liveEstimate.rate}%</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-slate-750 font-bold border-t border-dashed border-slate-200 pt-1.5 mt-1.5">
+                                                                <span>Estimated Policy Premium:</span>
+                                                                <span>Tsh {liveEstimate.total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="text-gray-600 text-xs">Route</p>
-                                                        <p className="font-medium text-gray-900 truncate">
-                                                            {formData.originPort} → {formData.destinationPort}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-gray-600 text-xs">Value</p>
-                                                        <p className="font-medium text-gray-900">
-                                                            {formData.currency} {parseFloat(formData.invoiceValue || "0").toLocaleString()}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-gray-600 text-xs">Cover Type</p>
-                                                        <p className="font-medium text-gray-900">{formData.coverType}</p>
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
 
-                                            {/* Proposer Details */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Name of Proposer <span className="text-red-500">*</span>
+                                            {/* Proposer Declarant Input */}
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                    Name of Proposer / Declarant <span className="text-rose-500">*</span>
                                                 </label>
                                                 <input
                                                     type="text"
@@ -1383,74 +1857,74 @@ export default function CreateOrderPage() {
                                                     value={formData.proposerName}
                                                     onChange={handleChange}
                                                     required
-                                                    placeholder="Full name or company name"
-                                                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all text-gray-900"
+                                                    placeholder="Provide full legal name or registered company name"
+                                                    className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm shadow-sm"
                                                 />
                                             </div>
 
-                                            {/* Date (auto-filled) */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            {/* Declaration Date */}
+                                            <div className="space-y-3">
+                                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                                     Declaration Date
                                                 </label>
                                                 <div className="relative">
-                                                    <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                                                    <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-450 pointer-events-none" />
                                                     <input
                                                         type="date"
                                                         name="declarationDate"
                                                         value={formData.declarationDate}
                                                         onChange={handleChange}
                                                         disabled
-                                                        className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900"
+                                                        className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl text-slate-500 font-semibold text-sm disabled:cursor-not-allowed"
                                                     />
                                                 </div>
                                             </div>
 
-                                            {/* Declaration Statement */}
-                                            <div className="bg-amber-50 border border-amber-200 rounded-lg sm:rounded-xl p-4 sm:p-6">
-                                                <div className="flex items-start gap-3">
+                                            {/* Terms of Declaration Checkbox */}
+                                            <div className="bg-amber-50/40 border border-amber-200/60 rounded-2xl p-4 sm:p-5">
+                                                <div className="flex items-start gap-3.5">
                                                     <input
                                                         type="checkbox"
                                                         id="acceptTerms"
                                                         name="acceptTerms"
                                                         checked={formData.acceptTerms}
-                                                        onChange={(e) => setFormData(prev => ({ ...prev, acceptTerms: e.target.checked }))}
-                                                        className="mt-1 w-5 h-5 text-brand-green border-gray-300 rounded focus:ring-brand-green focus:ring-2"
+                                                        onChange={handleChange}
+                                                        required
+                                                        className="mt-1 w-5 h-5 text-brand-green border-slate-300 rounded focus:ring-brand-green cursor-pointer flex-shrink-0"
                                                     />
-                                                    <label htmlFor="acceptTerms" className="flex-1 text-sm text-gray-700 cursor-pointer">
-                                                        <span className="font-semibold text-gray-900">
-                                                            I/We declare that the information given is true and complete.
-                                                        </span>
-                                                        {" "}I understand that providing false or misleading information may result in claim rejection or policy cancellation. This declaration forms the basis of the insurance contract.
+                                                    <label htmlFor="acceptTerms" className="flex-1 text-xs text-slate-605 cursor-pointer font-bold leading-relaxed">
+                                                        <span className="text-slate-800 font-extrabold block mb-0.5">Legal Declaration Confirmation</span>
+                                                        I/We declare that the information provided is complete and correct to the best of my knowledge. I understand that any false declarations may invalidate this contract and lead to claim rejections.
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Navigation */}
-                                        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                                        {/* Submit / Navigation */}
+                                        <div className="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
                                             <button
                                                 type="button"
                                                 onClick={prevStep}
-                                                className="px-6 py-3 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 order-2 sm:order-1"
+                                                className="px-5 py-3 bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                                             >
                                                 <ArrowLeft className="w-4 h-4" />
                                                 Back
                                             </button>
+                                            
                                             <button
                                                 type="submit"
                                                 disabled={loading || !validateCurrentStep()}
-                                                className="px-6 sm:px-8 py-3 bg-brand-green text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 shadow-sm order-1 sm:order-2"
+                                                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-emerald-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-green flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:shadow-md"
                                             >
                                                 {loading ? (
                                                     <>
-                                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                                        Submitting...
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Submitting Proposal...
                                                     </>
                                                 ) : (
                                                     <>
                                                         Submit Proposal
-                                                        <CheckCircle2 className="w-5 h-5" />
+                                                        <CheckCircle2 className="w-4 h-4" />
                                                     </>
                                                 )}
                                             </button>
@@ -1459,9 +1933,248 @@ export default function CreateOrderPage() {
                                 )}
                             </form>
                         </div>
+                    </div>                    {/* Right Live Estimate Panel Column (3 cols) */}
+                    <div className="lg:col-span-3 space-y-4">
+                        {/* Live Quote Estimate Side Widget */}
+                        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-24 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300">
+                            <h3 className="text-xs font-bold tracking-widest text-slate-400 uppercase mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                                <Receipt className="w-4 h-4 text-brand-green" />
+                                <span>Live Quote Estimate</span>
+                            </h3>
+
+                            {liveEstimate ? (
+                                <div className="space-y-5">
+                                    {/* Selected Carrier / Insurer Badge */}
+                                    {activeInsurer && (
+                                        <div className="flex items-center gap-3 bg-slate-50/60 p-3 rounded-xl border border-slate-200/50 shadow-sm animate-in fade-in duration-200">
+                                            <div className="w-8 h-8 rounded-lg bg-white border border-slate-200/50 flex items-center justify-center font-bold text-xs text-slate-650 overflow-hidden flex-shrink-0">
+                                                {activeInsurer.logoUrl ? (
+                                                    <img src={activeInsurer.logoUrl} alt={activeInsurer.fullName} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    activeInsurer.fullName?.substring(0, 2).toUpperCase()
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">Selected Carrier</p>
+                                                <p className="text-xs text-slate-800 font-extrabold truncate mt-1">{activeInsurer.fullName}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Dotted Voyage Visualizer */}
+                                    {formData.originCountry && formData.destinationCountry && (
+                                        <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-200/50 shadow-sm space-y-2.5 animate-in fade-in duration-200">
+                                            <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-none">
+                                                <span>Origin</span>
+                                                <span>Transit</span>
+                                                <span>Destination</span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-1.5 py-1">
+                                                <span className="text-[11px] font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm max-w-[65px] truncate text-center">
+                                                    {formData.originPort ? formData.originPort.substring(0, 4).toUpperCase() : formData.originCountry.substring(0, 3).toUpperCase()}
+                                                </span>
+                                                <div className="flex-1 relative flex items-center justify-center">
+                                                    <div className="absolute left-0 right-0 h-[1.5px] bg-dashed border-t border-dashed border-slate-300" />
+                                                    <div className="relative z-10 w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center text-brand-green shadow-sm animate-[bounce_1.5s_infinite]">
+                                                        {formData.transportMode === "Air" ? (
+                                                            <Plane className="w-3.5 h-3.5 animate-pulse" />
+                                                        ) : formData.transportMode === "Road" ? (
+                                                            <Truck className="w-3.5 h-3.5" />
+                                                        ) : (
+                                                            <Ship className="w-3.5 h-3.5" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-700 bg-white px-2 py-1 rounded border border-slate-200 shadow-sm max-w-[65px] truncate text-center">
+                                                    {formData.destinationPort ? formData.destinationPort.substring(0, 4).toUpperCase() : formData.destinationCountry.substring(0, 3).toUpperCase()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Cost breakdown */}
+                                    <div className="space-y-2.5 bg-slate-50/60 p-4 rounded-xl border border-slate-200/50 shadow-sm text-xs">
+                                        <div className="flex justify-between text-slate-500 font-medium">
+                                            <span>Valuation Basis:</span>
+                                            <span className="text-slate-800 font-bold">{formData.valuationBasis}</span>
+                                        </div>
+                                        <div className="flex justify-between text-slate-500 font-medium">
+                                            <span>Sum Insured:</span>
+                                            <span className="text-slate-800 font-semibold">Tsh {liveEstimate.sumInsured.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between text-slate-500 font-medium">
+                                            <span>Base Premium:</span>
+                                            <span className="text-slate-800 font-semibold">Tsh {liveEstimate.basePremium.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between text-slate-500 font-medium">
+                                            <span>VAT ({activePolicy?.vat ?? 18}%):</span>
+                                            <span className="text-slate-800 font-semibold">Tsh {liveEstimate.vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="flex justify-between text-slate-500 font-medium">
+                                            <span>Stamp Duty & Levy:</span>
+                                            <span className="text-slate-800 font-semibold">Tsh {(liveEstimate.stampDuty + liveEstimate.regulatoryLevy).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+                                        <div className="border-t border-slate-200/60 pt-3 mt-3 flex justify-between items-baseline">
+                                            <span className="text-xs font-bold text-slate-900">Total Premium:</span>
+                                            <div className="text-right">
+                                                <span className="text-[10px] font-bold text-brand-green mr-1 font-sans">Tsh</span>
+                                                <span className="text-base font-black text-brand-green tracking-tight font-mono">
+                                                    {liveEstimate.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p className="text-[10px] text-slate-400 font-bold leading-normal text-center">
+                                        *Estimates are calculated live based on current policy rates.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 px-4 bg-white rounded-xl border border-slate-200/50 shadow-inner">
+                                    <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-3">
+                                        <Coins className="w-5 h-5 animate-pulse text-slate-350" />
+                                    </div>
+                                    <h4 className="text-xs font-bold text-slate-700">Calculate Quote Premium</h4>
+                                    <p className="text-[11px] text-slate-400 font-semibold leading-normal mt-1.5">
+                                        Enter an invoice value and select a policy to view a real-time invoice calculation breakdown here.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Premium Submission Success Modal */}
+            {showSuccessModal && submittedData && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    {/* Glassmorphic Backdrop */}
+                    <div 
+                        className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
+                        onClick={() => {
+                            setShowSuccessModal(false);
+                            router.push("/dashboard/orders");
+                        }}
+                    />
+                    
+                    {/* Modal Content Card */}
+                    <div className="relative w-full max-w-md bg-white/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden transform transition-all duration-300 animate-in fade-in zoom-in-95 p-6 space-y-6">
+                        {/* Upper success pattern */}
+                        <div className="text-center space-y-3 pt-4">
+                            <div className="relative w-16 h-16 mx-auto bg-gradient-to-tr from-brand-green to-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 scale-100 hover:scale-105 transition-transform duration-300">
+                                <Check className="w-8 h-8 stroke-[3]" />
+                            </div>
+                            
+                            <div className="space-y-1">
+                                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                                    Proposal Submitted!
+                                </h3>
+                                <p className="text-xs font-semibold text-slate-500">
+                                    Your order proposal has been successfully processed.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {/* Premium Summary Receipt */}
+                        <div className="bg-slate-50/80 border border-slate-200/60 rounded-2xl p-5 space-y-4 relative overflow-hidden">
+                            {/* Dotted lines/cut texture at top & bottom */}
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-200 to-transparent bg-repeat-x bg-[size:10px_4px]" />
+                            
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-400 uppercase tracking-wider">Order Reference</span>
+                                <span className="font-extrabold text-slate-800 font-mono bg-white border border-slate-200/80 px-2 py-0.5 rounded-lg shadow-sm">
+                                    #{submittedData.orderId}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-400 uppercase tracking-wider">Invoice Number</span>
+                                <span className="font-extrabold text-slate-800 font-mono bg-white border border-slate-200/80 px-2 py-0.5 rounded-lg shadow-sm">
+                                    {submittedData.invoiceNumber}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-400 uppercase tracking-wider">Insurer</span>
+                                <span className="font-extrabold text-slate-700">
+                                    {submittedData.insurerName}
+                                </span>
+                            </div>
+                            
+                            <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between items-center text-xs">
+                                <span className="font-bold text-slate-400 uppercase tracking-wider">Sum Insured</span>
+                                <span className="font-extrabold text-slate-700">
+                                    {submittedData.currency} {submittedData.sumInsured?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                            </div>
+                            
+                            <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between items-baseline">
+                                <span className="text-xs font-bold text-slate-900">Total Premium</span>
+                                <div className="text-right">
+                                    <span className="text-[10px] font-bold text-brand-green mr-1">{submittedData.currency}</span>
+                                    <span className="text-base font-black text-brand-green">
+                                        {submittedData.totalPremium?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {/* Actions */}
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowSuccessModal(false);
+                                    router.push("/dashboard/orders");
+                                }}
+                                className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 text-center shadow-sm cursor-pointer hover:text-slate-800 active:scale-98"
+                            >
+                                Go to Orders
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowSuccessModal(false);
+                                    router.push("/dashboard/invoices");
+                                }}
+                                className="w-full py-3 px-4 bg-brand-green hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 text-center shadow-sm cursor-pointer shadow-brand-green/10 hover:shadow-md active:scale-98"
+                            >
+                                View Invoices
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
+    );
+}
+
+// AI Prefill Helper Components
+function AiFilledBadge() {
+    return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 text-emerald-805 border border-emerald-200 shadow-sm animate-pulse duration-1000">
+            <Sparkles className="w-2.5 h-2.5 text-emerald-700" />
+            AI PRE-FILLED
+        </span>
+    );
+}
+
+function HighlightedIfAi({ filled, children }: { filled: boolean; children: React.ReactNode }) {
+    return (
+        <div className={cn(
+            "transition-all duration-300 rounded-2xl",
+            filled ? "ring-2 ring-emerald-500/20 bg-emerald-50/10 p-1 -m-1" : ""
+        )}>
+            {children}
+        </div>
+    );
+}
+
+// Simple Coins fallback icon definition
+function Coins({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <circle cx="8" cy="8" r="6" />
+            <circle cx="18" cy="18" r="4" />
+            <path d="M12 18a6 6 0 0 0-6-6" />
+        </svg>
     );
 }

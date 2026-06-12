@@ -134,7 +134,7 @@ export default function PoliciesPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="flex items-center justify-center min-h-screen bg-transparent">
                 <div className="text-center">
                     <div className="relative w-12 h-12 mx-auto mb-4">
                         <div className="absolute inset-0 border-3 border-gray-200 rounded-full"></div>
@@ -147,7 +147,7 @@ export default function PoliciesPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header */}
                 <div className="mb-8">

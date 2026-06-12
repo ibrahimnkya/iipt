@@ -16,7 +16,7 @@ import {
     List,
     Receipt,
     Smartphone,
-    DollarSign,
+    Wallet,
     Activity,
     RefreshCw,
     ArrowUpRight,
@@ -179,7 +179,7 @@ export default function AdminPaymentsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -256,7 +256,7 @@ export default function AdminPaymentsPage() {
                         <div className="bg-white rounded-lg p-4 border border-gray-200 col-span-2">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                                    <Wallet className="w-5 h-5 text-emerald-600" />
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Total Revenue</p>

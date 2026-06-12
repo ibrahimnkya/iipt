@@ -1,3 +1,19 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+allowBuilds:
+  '0': '@prisma/client'
+  '1': '@prisma/engines'
+  '2': core-js
+  '3': esbuild
+  '4': msw
+  '5': prisma
+  '6': sharp
+  '7': unrs-resolver
+  tesseract.js: true
+
+overrides:
+  "prisma": "5.21.1"
+  "@prisma/client": "5.21.1"
+  "@prisma/adapter-pg": "5.21.1"

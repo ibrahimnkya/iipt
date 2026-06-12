@@ -3,8 +3,22 @@
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { 
+    Lock, 
+    ArrowRight, 
+    CheckCircle2, 
+    Eye, 
+    EyeOff, 
+    Mail, 
+    Shield, 
+    Ship, 
+    FileText, 
+    CreditCard, 
+    Globe, 
+    LockKeyhole 
+} from "lucide-react";
 import Link from "next/link";
-import { Shield, Lock, ArrowRight, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 function LoginForm() {
     const router = useRouter();
@@ -12,6 +26,7 @@ function LoginForm() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
     const registered = searchParams.get("registered");
 
     const [formData, setFormData] = useState({
@@ -38,9 +53,14 @@ function LoginForm() {
             if (res?.error) {
                 setError("Invalid email or password");
             } else {
-                // Fetch the session to check the role
                 const sessionRes = await fetch("/api/auth/session");
                 const session = await sessionRes.json();
+
+                const userName = session?.user?.fullName || session?.user?.name || "User";
+                toast.success(`Welcome back, ${userName}!`, {
+                    description: "You have successfully logged in.",
+                    duration: 3000,
+                });
 
                 if (session?.user?.role === "ADMIN") {
                     router.push("/admin");
@@ -56,149 +76,240 @@ function LoginForm() {
     };
 
     return (
-        <div className="min-h-screen flex bg-white font-sans">
-            {/* Left Side: Branding / Marketing */}
-            <div className="hidden lg:flex lg:w-1/2 bg-[#0F172A] relative overflow-hidden flex-col justify-between p-16">
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-green/20 via-brand-blue/10 to-transparent opacity-50" />
-
-                <div className="relative z-10">
-                    <Link href="/" className="flex items-center gap-3">
-                        <img src="/logo.svg" alt="TIIP Logo" className="w-12 h-12 brightness-200" />
-                        <span className="text-3xl font-black tracking-tighter text-white">TIIP</span>
-                    </Link>
-                </div>
-
-                <div className="relative z-10 max-w-lg">
-                    <h1 className="text-5xl font-black text-white leading-tight mb-6">
-                        Secure Your Imports <br />
-                        <span className="text-brand-green">with Efficiency.</span>
-                    </h1>
-                    <p className="text-xl text-gray-400 font-medium leading-relaxed mb-12">
-                        The most trusted portal for cargo and import insurance in Tanzania. Fast, compliant, and fully digital.
-                    </p>
-
-                    <div className="space-y-6">
-                        {[
-                            { icon: Shield, title: "Official TIRA Compliance", text: "Fully aligned with Tanzania Insurance Regulatory Authority." },
-                            { icon: Lock, title: "Secure Transactions", text: "Your data and payments are protected by high-level encryption." },
-                            { icon: CheckCircle2, title: "Instant Cover Notes", text: "Get your insurance certificates immediately after payment." }
-                        ].map((feature, i) => (
-                            <div key={i} className="flex gap-4 items-start">
-                                <div className="mt-1 w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-brand-green border border-white/10">
-                                    <feature.icon className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold">{feature.title}</h3>
-                                    <p className="text-gray-500 text-sm leading-relaxed">{feature.text}</p>
-                                </div>
+        <div className="min-h-screen grainy-bg flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+            {/* Centered Main Card Container */}
+            <div className="w-full max-w-5xl bg-white border border-slate-100 rounded-2xl sm:rounded-3xl md:rounded-[28px] shadow-[0_24px_60px_-15px_rgba(15,23,42,0.08)] overflow-hidden flex flex-col md:flex-row min-h-[580px] relative z-10">
+                
+                {/* Left Side: Form (55% width on desktop) */}
+                <div className="w-full md:w-[55%] p-6 sm:p-10 md:p-12 lg:p-16 flex flex-col justify-between">
+                    
+                    {/* Brand Logo Header */}
+                    <div className="flex items-center justify-between mb-8">
+                        <Link href="/" className="flex items-center gap-2.5 group" prefetch={false}>
+                            {/* App Logo image asset */}
+                            <div className="relative w-10 h-10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                <img src="/logo.svg" alt="NIIS-T Logo" className="w-9 h-9 object-contain" />
                             </div>
-                        ))}
+                            <span className="text-lg font-black tracking-tight text-slate-800">
+                                NIIS-T
+                            </span>
+                        </Link>
                     </div>
-                </div>
 
-                <div className="relative z-10 pt-8 border-t border-white/10 flex justify-between items-center text-gray-500 text-sm font-medium">
-                    <span>&copy; {new Date().getFullYear()} TIIP. Tanzania Inc.</span>
-                    <div className="flex gap-6">
-                        <Link href="#" className="hover:text-white transition-colors">Help</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-                    </div>
-                </div>
-            </div>
-
-            {/* Right Side: Auth Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center bg-[#F8FAFC] p-8 sm:p-12 lg:p-20">
-                <div className="w-full max-w-md space-y-12">
-                    <div className="space-y-4">
-                        <div className="lg:hidden mb-8">
-                            <Link href="/" className="flex items-center gap-3">
-                                <img src="/logo.svg" alt="TIIP Logo" className="w-10 h-10" />
-                                <span className="text-2xl font-black tracking-tighter text-gray-900 leading-none">TIIP</span>
-                            </Link>
-                        </div>
-                        <h2 className="text-4xl font-black text-gray-900 tracking-tight">Login to your account</h2>
-                        <p className="text-lg text-gray-500 font-medium leading-relaxed">
-                            Welcome back! Please enter your details to access the portal.
+                    {/* Header Greetings */}
+                    <div className="space-y-2 mb-6">
+                        <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                            Login to your account!
+                        </h2>
+                        <p className="text-xs font-medium text-slate-450 leading-relaxed">
+                            Enter your registered email address and password to login!
                         </p>
                     </div>
 
+                    {/* Registration Success Info */}
                     {registered && (
-                        <div className="bg-green-50 text-green-700 p-4 rounded-xl text-sm font-bold border border-green-200 flex items-center gap-3">
-                            <CheckCircle2 className="w-5 h-5" />
-                            Registration successful! Please sign in.
+                        <div className="mb-5 bg-emerald-50/80 border border-emerald-100 rounded-xl p-3.5 text-xs font-bold text-brand-green flex items-start gap-2.5">
+                            <CheckCircle2 className="w-4 h-4 mt-0.5 text-brand-green shrink-0" />
+                            <div>
+                                <p className="uppercase tracking-wider text-[10px]">Registration successful!</p>
+                                <p className="text-[10px] font-semibold text-emerald-600 mt-0.5">Please sign in below to continue.</p>
+                            </div>
                         </div>
                     )}
 
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                    {/* Main Login Form */}
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold border border-red-200 animate-in fade-in slide-in-from-top-2 text-center">
+                            <div className="bg-rose-50 text-rose-600 py-3 px-4 rounded-xl text-[11px] font-bold border border-rose-100 animate-in fade-in slide-in-from-top-2 text-center uppercase tracking-wider">
                                 {error}
                             </div>
                         )}
 
-                        <div className="space-y-5">
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-500 uppercase tracking-widest leading-none">Email address</label>
+                        {/* Email Address */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="email" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-0.5">
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-355" />
                                 <input
+                                    id="email"
                                     name="email"
                                     type="email"
                                     required
-                                    className="w-full px-6 py-4 bg-white border border-gray-200 rounded-[10px] focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300"
-                                    placeholder="john@example.com"
+                                    autoComplete="username"
                                     value={formData.email}
                                     onChange={handleChange}
+                                    className="w-full pl-11 pr-5 py-3 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-350 text-sm"
+                                    placeholder="eg. pixelcot@gmail.com"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-sm font-bold text-gray-500 uppercase tracking-widest leading-none">Password</label>
-                                    <Link href="#" className="text-xs font-bold text-brand-blue hover:underline">Forgot password?</Link>
-                                </div>
-                                <div className="relative">
-                                    <input
-                                        name="password"
-                                        type={showPassword ? "text" : "password"}
-                                        required
-                                        className="w-full px-6 py-4 pr-12 bg-white border border-gray-200 rounded-[10px] focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300"
-                                        placeholder="••••••••"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                    >
-                                        {showPassword ? (
-                                            <EyeOff className="w-5 h-5" />
-                                        ) : (
-                                            <Eye className="w-5 h-5" />
-                                        )}
-                                    </button>
-                                </div>
+                        </div>
+
+                        {/* Password */}
+                        <div className="space-y-1.5">
+                            <label htmlFor="password" className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-0.5">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-350" />
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    required
+                                    autoComplete="current-password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="w-full pl-11 pr-12 py-3 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-350 text-sm"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-655 transition-colors"
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="w-4 h-4" />
+                                    ) : (
+                                        <Eye className="w-4 h-4" />
+                                    )}
+                                </button>
                             </div>
                         </div>
 
-                        <div className="space-y-6">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-5 bg-brand-green text-white text-lg font-black rounded-[10px] shadow-2xl shadow-brand-green/30 hover:bg-green-700 transition-all hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2"
+                        {/* Remember Me / Forgot Password */}
+                        <div className="flex items-center justify-between pt-1">
+                            <label className="flex items-center gap-2 text-xs text-slate-500 font-bold cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue/25 transition-all cursor-pointer"
+                                />
+                                Remember me
+                            </label>
+                            <Link 
+                                href="#" 
+                                className="text-xs font-bold text-brand-blue hover:underline transition-all" 
+                                prefetch={false}
                             >
-                                {loading ? "Signing in..." : "Continue"}
-                                {!loading && <ArrowRight className="w-5 h-5" />}
-                            </button>
-
-                            <div className="text-center pt-2">
-                                <p className="text-gray-500 font-bold">
-                                    Don&apos;t have an account?{" "}
-                                    <Link href="/register" className="text-brand-blue hover:text-blue-700 transition-colors">
-                                        Join TIIP for free
-                                    </Link>
-                                </p>
-                            </div>
+                                Forgot Password?
+                            </Link>
                         </div>
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3.5 bg-[#0052FF] hover:bg-blue-600 active:scale-98 text-white text-xs font-bold uppercase tracking-widest rounded-xl shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 transition-all disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-1.5 cursor-pointer mt-4"
+                        >
+                            {loading ? "Logging in..." : "Login"}
+                            {!loading && <ArrowRight className="w-4 h-4 stroke-[2.5]" />}
+                        </button>
                     </form>
+
+                    {/* Form Footer */}
+                    <p className="mt-8 text-center text-xs text-slate-400 font-bold uppercase tracking-wider">
+                        Don&apos;t have an account?{" "}
+                        <Link 
+                            href="/register" 
+                            className="text-brand-blue hover:text-blue-700 transition-colors uppercase tracking-wider ml-1"
+                            prefetch={false}
+                        >
+                            Signup
+                        </Link>
+                    </p>
+
                 </div>
+
+                {/* Right Side: Promo Column (45% width on desktop) */}
+                <div className="hidden md:flex md:w-[45%] bg-gradient-to-b from-[#EBF2FE] to-white p-12 flex-col justify-between relative overflow-hidden border-l border-slate-100/50 select-none">
+                    
+                    {/* Grid pattern background decoration */}
+                    <div className="absolute inset-0 grid-pattern opacity-15 pointer-events-none" />
+
+                    {/* Promo Illustration: Concentric Orbits */}
+                    <div className="relative flex-1 flex items-center justify-center min-h-[260px] scale-90 lg:scale-100">
+                        {/* Outer Orbit */}
+                        <div className="absolute w-[240px] h-[240px] rounded-full border border-dashed border-blue-250/30 animate-[spin_80s_linear_infinite]" />
+                        
+                        {/* Middle Orbit */}
+                        <div className="absolute w-[170px] h-[170px] rounded-full border border-dashed border-blue-250/40 animate-[spin_50s_linear_infinite_reverse]" />
+                        
+                        {/* Inner Orbit */}
+                        <div className="absolute w-[110px] h-[110px] rounded-full border border-dashed border-blue-250/50 animate-[spin_30s_linear_infinite]" />
+
+                        {/* Central Sphere */}
+                        <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-brand-blue to-blue-500 flex items-center justify-center shadow-lg shadow-brand-blue/30 scale-105 z-10">
+                            <div className="absolute inset-0 bg-white/10 rounded-full animate-ping opacity-25" />
+                            <LockKeyhole className="w-6 h-6 text-white" />
+                        </div>
+
+                        {/* Orbit Icons / Floating Badges */}
+                        {/* Badge 1: TIRA Cover Notes */}
+                        <div 
+                            className="absolute bg-white/80 border border-white/60 p-2 rounded-xl shadow-md backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform cursor-default"
+                            style={{ transform: "translate(-90px, -45px)" }}
+                        >
+                            <FileText className="w-4 h-4 text-brand-green" />
+                        </div>
+
+                        {/* Badge 2: Cargo / Shipment */}
+                        <div 
+                            className="absolute bg-white/80 border border-white/60 p-2 rounded-xl shadow-md backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform cursor-default"
+                            style={{ transform: "translate(80px, -70px)" }}
+                        >
+                            <Ship className="w-4 h-4 text-brand-blue" />
+                        </div>
+
+                        {/* Badge 3: Official Security */}
+                        <div 
+                            className="absolute bg-white/80 border border-white/60 p-2 rounded-xl shadow-md backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform cursor-default"
+                            style={{ transform: "translate(-60px, 85px)" }}
+                        >
+                            <Shield className="w-4 h-4 text-amber-500" />
+                        </div>
+
+                        {/* Badge 4: Secure Payments */}
+                        <div 
+                            className="absolute bg-white/80 border border-white/60 p-2 rounded-xl shadow-md backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform cursor-default"
+                            style={{ transform: "translate(90px, 60px)" }}
+                        >
+                            <CreditCard className="w-4 h-4 text-emerald-500" />
+                        </div>
+
+                        {/* Badge 5: Global Trade */}
+                        <div 
+                            className="absolute bg-white/80 border border-white/60 p-1.5 rounded-lg shadow-sm backdrop-blur-sm flex items-center justify-center hover:scale-110 transition-transform cursor-default"
+                            style={{ transform: "translate(10px, -95px)" }}
+                        >
+                            <Globe className="w-3.5 h-3.5 text-slate-500" />
+                        </div>
+                    </div>
+
+                    {/* Bottom Promo Text */}
+                    <div className="space-y-4 relative z-10 pt-4 text-center">
+                        <div className="space-y-2">
+                            <h3 className="text-lg font-black text-slate-900 leading-tight">
+                                Secure Your Imports <br />
+                                <span className="text-brand-blue">Everywhere</span>
+                            </h3>
+                            <p className="text-xs font-semibold text-slate-500 leading-relaxed max-w-[260px] mx-auto">
+                                Generate official TIRA cover notes and manage cargo policies directly in one unified portal.
+                            </p>
+                        </div>
+
+                        {/* Slider Dot Indicators */}
+                        <div className="flex items-center justify-center gap-1.5 pt-1">
+                            <div className="w-5 h-1.5 rounded-full bg-brand-blue transition-all" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300 hover:bg-slate-450 transition-all cursor-pointer" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300 hover:bg-slate-450 transition-all cursor-pointer" />
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
         </div>
     );
@@ -206,7 +317,17 @@ function LoginForm() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-sans font-black text-brand-blue">Loading TIIP...</div>}>
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans">
+                <div className="text-center">
+                    <div className="relative w-12 h-12 mx-auto mb-4">
+                        <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p className="text-xs text-slate-500 font-extrabold uppercase tracking-widest animate-pulse">Loading NIIS-T...</p>
+                </div>
+            </div>
+        }>
             <LoginForm />
         </Suspense>
     );

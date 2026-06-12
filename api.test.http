@@ -1,0 +1,754 @@
+###############################################################################
+# Marine Insurance API — REST Client collection
+# File: api.test.http
+#
+# CURSOR / REST CLIENT TROUBLESHOOTING (connection rejected):
+#   1. Install extension: "REST Client" by Huachao Mao (humao.rest-client)
+#   2. Terminal: cd backend && php artisan serve  (must show "Server running on...")
+#   3. Reload Cursor window after changing .vscode/settings.json (proxy fix)
+#   4. If still failing: php artisan serve --host=127.0.0.1 --port=8000
+#   5. Test in terminal: curl http://localhost:8000/api/v1/countries
+#   6. Cursor Settings: search "proxy" → set Http: Proxy Support to "off" for local dev
+#
+# Seeded test users (password: password) — require: php artisan db:seed
+#   customer@marine.test | insurer@marine.test | admin@marine.test | tira@marine.test
+# If login returns "Invalid credentials", run: php artisan db:seed
+###############################################################################
+
+#@baseUrl = http://localhost:8000/api/v1 
+
+@baseUrl = https://marineinsuranceapi.akiliapp.co.tz/api/v1
+@contentType = application/json
+@accept = application/json
+
+# Demo TIRA (from .env TIRA_DEMO_API_KEY)
+@demoTiraKey = demo-tira-secret
+
+# Fill after login (or use response variables below)
+@customerToken = 
+@insurerToken = 
+@adminToken = 
+@tiraToken = 
+
+# Fill from API responses when testing flows
+@orderId = 1
+@invoiceId = 1
+@policyId = 1
+@premiumRecordId = 1
+@tiraSubmissionId = 1
+@currencyId = 1
+@countryId = 1
+@shippingLineId = 1
+@insurerCompanyId = 1
+@tiraPremiumNumber = TP-2026-00000001
+
+
+###############################################################################
+# 0. AUTH — Unified login (all roles use POST /auth/login)
+###############################################################################
+
+### Login — Customer
+# @name loginCustomer
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "customer@marine.test",
+  "password": "password"
+}
+
+###
+@customerToken = {{loginCustomer.response.body.data.access_token}}
+
+### Login — Insurer
+# @name loginInsurer
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "insurer@marine.test",
+  "password": "password"
+}
+
+###
+@insurerToken = {{loginInsurer.response.body.data.access_token}}
+
+### Login — Admin
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "admin@marine.test",
+  "password": "password"
+}
+
+###
+@adminToken = {{loginAdmin.response.body.data.access_token}}
+
+### Login — TIRA
+# @name loginTira
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "email": "tira@marine.test",
+  "password": "password"
+}
+
+###
+@tiraToken = {{loginTira.response.body.data.access_token}}
+
+### Register customer (public)
+POST {{baseUrl}}/auth/register/customer
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "New Customer",
+  "email": "newcustomer@example.com",
+  "password": "password",
+  "password_confirmation": "password",
+  "phone": "+255700000099"
+}
+
+### Guest customer registration (sets @customerToken for order APIs)
+# @name loginGuest
+POST {{baseUrl}}/auth/guest
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Guest User",
+  "email": "guest@example.com",
+  "phone": "+255712345678",
+  "password": "password",
+  "password_confirmation": "password"
+}
+
+###
+@customerToken = {{loginGuest.response.body.data.access_token}}
+
+### Auth — Me (any logged-in user)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Auth — Refresh token
+POST {{baseUrl}}/auth/refresh
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Auth — Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Customer — Complete first login
+PATCH {{baseUrl}}/auth/customer/first-login-complete
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+
+###############################################################################
+# 1. MASTER DATA — Public lookups (no auth)
+###############################################################################
+
+### List countries
+GET {{baseUrl}}/countries
+Accept: {{accept}}
+
+### List ports
+GET {{baseUrl}}/ports
+Accept: {{accept}}
+
+### List ports by country
+GET {{baseUrl}}/ports?country_id={{countryId}}
+Accept: {{accept}}
+
+### List shipping lines
+GET {{baseUrl}}/shipping-lines
+Accept: {{accept}}
+
+### List currencies
+GET {{baseUrl}}/currencies
+Accept: {{accept}}
+
+
+###############################################################################
+# 2. INSURER — Registration & company (insurer role)
+###############################################################################
+
+### Register insurer company + user (public)
+POST {{baseUrl}}/insurer/register
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Acme Marine Insurance Ltd",
+  "contact_person_name": "Jane Insurer",
+  "company_email": "acme.insurer@example.com",
+  "contact_person_phone": "+255700000010",
+  "registration_number": "BRELA-999888",
+  "tin": "TIN-111222",
+  "address": "Dar es Salaam, Tanzania",
+  "description": "Marine cargo underwriter",
+  "password": "password",
+  "password_confirmation": "password"
+}
+
+### Get insurer company profile
+GET {{baseUrl}}/insurer/company
+Authorization: Bearer {{insurerToken}}
+Accept: {{accept}}
+
+### Update insurer company profile
+PATCH {{baseUrl}}/insurer/company
+Authorization: Bearer {{insurerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "address": "Plot 12, Harbor Road, Dar es Salaam",
+  "description": "Updated company description"
+}
+
+
+###############################################################################
+# 3. POLICIES — Insurer only
+###############################################################################
+
+### List policies (optional: ?is_active=true&search=MAR)
+GET {{baseUrl}}/policies?is_active=true
+Authorization: Bearer {{insurerToken}}
+Accept: {{accept}}
+
+### Create policy
+# @name createPolicy
+POST {{baseUrl}}/policies
+Authorization: Bearer {{insurerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Marine Cargo ICC-A Premium",
+  "code": "MAR-ICC-A-002",
+  "clause_type": "ICC-A",
+  "is_active": true,
+  "description": "Standard marine cargo cover",
+  "cargo_types": ["General", "Fragile"],
+  "transport_modes": ["Sea", "Air"],
+  "incoterms": ["CIF", "FOB", "CFR"],
+  "geographical_scope": "worldwide",
+  "valuation_basis": "invoice_value",
+  "minimum_sum_insured": 1000,
+  "maximum_sum_insured": 5000000,
+  "currency": "USD",
+  "premium_rate": 0.015,
+  "min_premium": 50,
+  "hazard_loading_percent": 10,
+  "discount_percent": 0,
+  "vat_percent": 18,
+  "auto_generate_invoice": true,
+  "auto_issue_after_payment": false,
+  "require_manual_approval": true,
+  "internal_notes": "Internal underwriting notes",
+  "start_date": "2026-01-01",
+  "end_date": "2027-12-31",
+  "attachments": [
+    {
+      "file_path": "policies/attachments/sample-clause.pdf",
+      "original_name": "clause.pdf"
+    }
+  ]
+}
+
+###
+@policyId = {{createPolicy.response.body.data.id}}
+
+### Get policy by ID
+GET {{baseUrl}}/policies/{{policyId}}
+Authorization: Bearer {{insurerToken}}
+Accept: {{accept}}
+
+### Update policy
+PATCH {{baseUrl}}/policies/{{policyId}}
+Authorization: Bearer {{insurerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "is_active": true,
+  "discount_percent": 5,
+  "min_premium": 75
+}
+
+
+###############################################################################
+# 4. ORDERS — Customer multi-step wizard
+# Requires role: customer — run "Login — Customer" OR "Guest customer registration"
+# in section 0 first so @customerToken is set. Admin/insurer/tira tokens return 403.
+###############################################################################
+
+### Verify token (optional — should show role: customer)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Create draft order
+# @name createOrder
+POST {{baseUrl}}/orders
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+###
+@orderId = {{createOrder.response.body.data.id}}
+
+### List my orders
+GET {{baseUrl}}/orders?per_page=15
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Get order (all steps)
+GET {{baseUrl}}/orders/{{orderId}}
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Step 1 — Insurable interest
+PUT {{baseUrl}}/orders/{{orderId}}/steps/1
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "capacity": "Owner",
+  "capacity_other": null,
+  "business_of_sales": "CIF",
+  "business_of_sales_other": null
+}
+
+### Step 1 — Capacity = Other
+# PUT {{baseUrl}}/orders/{{orderId}}/steps/1
+# Authorization: Bearer {{customerToken}}
+# Content-Type: {{contentType}}
+#
+# {
+#   "capacity": "Other",
+#   "capacity_other": "Freight forwarder",
+#   "business_of_sales": "FOB",
+#   "business_of_sales_other": null
+# }
+
+### Step 2 — Cargo details
+PUT {{baseUrl}}/orders/{{orderId}}/steps/2
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "nature_of_cargo": "General",
+  "packaging_method": "Cartons",
+  "packaging_method_other": null,
+  "total_weight_quantity": "1200 kg",
+  "description": "Consumer electronics in cartons"
+}
+
+### Step 3 — Voyage details
+PUT {{baseUrl}}/orders/{{orderId}}/steps/3
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "country_of_origin_id": {{countryId}},
+  "port_of_origin": "Port of Dar es Salaam",
+  "country_of_destination_id": {{countryId}},
+  "port_of_destination": "Port of Mombasa",
+  "mode_of_transport": "Sea",
+  "mode_of_transport_other": null,
+  "expected_dispatch_date": "2026-06-15",
+  "transhipment_involved": false,
+  "transhipment_details": null
+}
+
+### Step 4 — Conveyance
+PUT {{baseUrl}}/orders/{{orderId}}/steps/4
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "vessel_name": "MV Kilimanjaro",
+  "shipping_line_id": {{shippingLineId}}
+}
+
+### Step 5 — Insurance & valuation
+PUT {{baseUrl}}/orders/{{orderId}}/steps/5
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "insurer_company_id": {{insurerCompanyId}},
+  "policy_id": {{policyId}},
+  "invoice_value": 100000,
+  "currency_id": {{currencyId}},
+  "basis_of_valuation": "Invoice value",
+  "total_sum_insured": 110000,
+  "additional_cover": "War and strikes cover requested"
+}
+
+### Step 6 — Additional information
+PUT {{baseUrl}}/orders/{{orderId}}/steps/6
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "storage_details": "Warehouse at origin port",
+  "storage_before_or_after_transit": true,
+  "storage_before_location": "Dar warehouse A",
+  "storage_after_location": "Mombasa warehouse B",
+  "storage_duration": "30 days",
+  "prior_claim": false,
+  "prior_claim_details": null
+}
+
+### Step 6 — Upload claim document (multipart)
+POST {{baseUrl}}/orders/{{orderId}}/documents
+Authorization: Bearer {{customerToken}}
+Content-Type: multipart/form-data; boundary=----Boundary
+
+------Boundary
+Content-Disposition: form-data; name="document"; filename="claim-evidence.pdf"
+Content-Type: application/pdf
+
+< ./storage/app/public/sample-claim.pdf
+------Boundary--
+
+### Step 7 — Review (optional confirmation)
+PUT {{baseUrl}}/orders/{{orderId}}/steps/7
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "confirmed": true
+}
+
+### Step 8 — Declaration
+PUT {{baseUrl}}/orders/{{orderId}}/steps/8
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "proposer_name": "Test Customer",
+  "declaration_date": "2026-05-25",
+  "signature_acknowledged": 1
+}
+
+### Submit order (creates invoice, status = pending)
+POST {{baseUrl}}/orders/{{orderId}}/submit
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Approve order — Insurer or Admin
+PATCH {{baseUrl}}/orders/{{orderId}}/status
+Authorization: Bearer {{insurerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "status": "approved"
+}
+
+### Other order statuses (insurer/admin)
+# pending | approved | issued | cancelled | rejected
+
+# PATCH {{baseUrl}}/orders/{{orderId}}/status
+# Authorization: Bearer {{insurerToken}}
+# Content-Type: {{contentType}}
+#
+# { "status": "rejected" }
+
+
+###############################################################################
+# 5. INVOICES — Customer
+###############################################################################
+
+### List invoices
+GET {{baseUrl}}/invoices
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Get invoice (includes order)
+# @name getInvoice
+GET {{baseUrl}}/invoices/{{invoiceId}}
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+###
+@invoiceId = {{getInvoice.response.body.data.id}}
+
+
+###############################################################################
+# 6. PAYMENTS — Customer (order must be approved)
+###############################################################################
+
+### Pay invoice
+# @name payInvoice
+POST {{baseUrl}}/invoices/{{invoiceId}}/pay
+Authorization: Bearer {{customerToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "payment_method": "bank_transfer",
+  "payment_notes": "Test payment via REST Client"
+}
+
+### List payments
+GET {{baseUrl}}/payments?per_page=15
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Payment dashboard stats
+GET {{baseUrl}}/payments/dashboard
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+
+###############################################################################
+# 7. CUSTOMER DASHBOARDS
+###############################################################################
+
+### Customer main dashboard
+GET {{baseUrl}}/customer/dashboard
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Customer orders dashboard
+GET {{baseUrl}}/customer/dashboard/orders
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+### Customer invoices dashboard
+GET {{baseUrl}}/customer/dashboard/invoices
+Authorization: Bearer {{customerToken}}
+Accept: {{accept}}
+
+
+###############################################################################
+# 8. INSURER DASHBOARDS & REPORTS
+###############################################################################
+
+### Insurer dashboard summary
+GET {{baseUrl}}/insurer/dashboard
+Authorization: Bearer {{insurerToken}}
+Accept: {{accept}}
+
+### Insurer orders dashboard (paginated list)
+GET {{baseUrl}}/insurer/dashboard/orders
+Authorization: Bearer {{insurerToken}}
+Accept: {{accept}}
+
+### Insurer reports summary
+GET {{baseUrl}}/insurer/reports/summary
+Authorization: Bearer {{insurerToken}}
+Accept: {{accept}}
+
+
+###############################################################################
+# 9. TIRA — Reconciliation (role: tira, same login as everyone)
+###############################################################################
+
+### TIRA dashboard
+GET {{baseUrl}}/tira/dashboard
+Authorization: Bearer {{tiraToken}}
+Accept: {{accept}}
+
+### List premium records
+GET {{baseUrl}}/tira/premiums?per_page=20
+Authorization: Bearer {{tiraToken}}
+Accept: {{accept}}
+
+### List premiums — filters
+# GET {{baseUrl}}/tira/premiums?status=reported&tira_premium_number={{tiraPremiumNumber}}&from_date=2026-01-01&to_date=2026-12-31
+# Authorization: Bearer {{tiraToken}}
+
+### Get premium record by ID
+GET {{baseUrl}}/tira/premiums/{{premiumRecordId}}
+Authorization: Bearer {{tiraToken}}
+Accept: {{accept}}
+
+### Get premium by platform number
+GET {{baseUrl}}/tira/premiums/by-number/{{tiraPremiumNumber}}
+Authorization: Bearer {{tiraToken}}
+Accept: {{accept}}
+
+### Reconcile premium — matched
+POST {{baseUrl}}/tira/premiums/{{premiumRecordId}}/reconcile
+Authorization: Bearer {{tiraToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "status": "matched",
+  "tira_system_amount": 1650.00,
+  "notes": "Amounts match TIRA ledger"
+}
+
+### Reconcile premium — disputed
+# POST {{baseUrl}}/tira/premiums/{{premiumRecordId}}/reconcile
+# Authorization: Bearer {{tiraToken}}
+# Content-Type: {{contentType}}
+#
+# {
+#   "status": "disputed",
+#   "tira_system_amount": 1600.00,
+#   "notes": "Variance found in TIRA system"
+# }
+
+### Export reconciliation CSV
+GET {{baseUrl}}/tira/reconciliation/export?from_date=2026-01-01&to_date=2026-12-31
+Authorization: Bearer {{tiraToken}}
+Accept: text/csv
+
+
+###############################################################################
+# 10. DEMO TIRA API — Simulates government receive endpoint
+###############################################################################
+
+### Demo: Notify paid premium (no user JWT — uses X-Demo-Tira-Key)
+POST {{baseUrl}}/demo/tira/v1/premiums/notify-paid
+Content-Type: {{contentType}}
+Accept: {{accept}}
+X-Demo-Tira-Key: {{demoTiraKey}}
+
+{
+  "tira_premium_number": "{{tiraPremiumNumber}}",
+  "payment_status": "paid",
+  "paid_at": "2026-05-25T10:30:00Z",
+  "premium_amount": 1650.00,
+  "currency": "USD",
+  "payment_reference": "PAY-20260525-ABC12345",
+  "insurer": {
+    "name": "Marine Test Insurance Ltd",
+    "registration_number": "BRELA-123456"
+  },
+  "policy_code": "MAR-ICC-A-001",
+  "order_reference": "ORD-20260525-0001",
+  "invoice_number": "INV-20260525-0001"
+}
+
+### Demo: Simulate rejection (?simulate=reject)
+# POST {{baseUrl}}/demo/tira/v1/premiums/notify-paid?simulate=reject
+# X-Demo-Tira-Key: {{demoTiraKey}}
+# ...
+
+### Demo inbox — list received (admin or tira)
+GET {{baseUrl}}/demo/tira/v1/premiums
+Authorization: Bearer {{tiraToken}}
+Accept: {{accept}}
+
+### Demo inbox — get by premium number
+GET {{baseUrl}}/demo/tira/v1/premiums/{{tiraPremiumNumber}}
+Authorization: Bearer {{tiraToken}}
+Accept: {{accept}}
+
+
+###############################################################################
+# 11. ADMIN
+###############################################################################
+
+### Admin — Create user (e.g. TIRA officer)
+POST {{baseUrl}}/admin/users
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "New TIRA Officer",
+  "email": "newtira@marine.test",
+  "password": "password",
+  "role": "tira"
+}
+
+### Admin — List currencies
+GET {{baseUrl}}/admin/currencies
+Authorization: Bearer {{adminToken}}
+Accept: {{accept}}
+
+### Admin — Create currency
+POST {{baseUrl}}/admin/currencies
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "code": "KES",
+  "name": "Kenyan Shilling",
+  "symbol": "KSh",
+  "is_active": true
+}
+
+### Admin — Get currency
+GET {{baseUrl}}/admin/currencies/{{currencyId}}
+Authorization: Bearer {{adminToken}}
+Accept: {{accept}}
+
+### Admin — Update currency
+PUT {{baseUrl}}/admin/currencies/{{currencyId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "name": "Kenyan Shilling",
+  "is_active": true
+}
+
+### Admin — Delete currency
+DELETE {{baseUrl}}/admin/currencies/{{currencyId}}
+Authorization: Bearer {{adminToken}}
+Accept: {{accept}}
+
+### Admin — Get storage duration setting
+GET {{baseUrl}}/admin/settings/storage-duration
+Authorization: Bearer {{adminToken}}
+Accept: {{accept}}
+
+### Admin — Update storage duration
+PATCH {{baseUrl}}/admin/settings/storage-duration
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+  "storage_duration": "45 days"
+}
+
+### Admin — Retry failed TIRA submission
+POST {{baseUrl}}/admin/tira/submissions/{{tiraSubmissionId}}/retry
+Authorization: Bearer {{adminToken}}
+Accept: {{accept}}
+
+
+###############################################################################
+# 12. SUGGESTED END-TO-END TEST FLOW
+###############################################################################
+# 1. loginCustomer → loginInsurer
+# 2. GET countries, currencies, shipping-lines → set @countryId, @currencyId, @shippingLineId
+# 3. GET policies (insurer) or createPolicy → set @policyId
+# 4. GET insurer/company → set @insurerCompanyId from seeded data (often 1)
+# 5. createOrder → steps 1-8 → submit
+# 6. PATCH order status approved (insurer)
+# 7. GET invoices → set @invoiceId → pay
+# 8. php artisan queue:work (process SubmitPremiumToTira job)
+# 9. loginTira → GET tira/premiums → reconcile
+###############################################################################

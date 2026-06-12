@@ -127,9 +127,9 @@ export default function ContactPage() {
                                         { 
                                             icon: Mail, 
                                             title: "Official Email", 
-                                            text: "info@iipt.go.tz", 
+                                            text: "info@niip.co.tz", 
                                             sub: "We usually reply in 24 hours",
-                                            href: "mailto:info@iipt.go.tz"
+                                            href: "mailto:info@niip.co.tz"
                                         },
                                         { 
                                             icon: MapPin, 

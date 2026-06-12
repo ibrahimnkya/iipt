@@ -1,0 +1,56 @@
+[2026-05-31T15:58:50.479Z] GET /api/admin/reports called
+[2026-05-31T15:58:50.480Z] Bypassing NextAuth session check via debug header
+[2026-05-31T15:58:50.480Z] Session user: {"role":"ADMIN","accessToken":"mocked-admin-token"}
+[2026-05-31T15:58:50.480Z] Using initial token: Exists
+[2026-05-31T15:58:50.480Z] Attempting dynamic background login as insurer...
+[2026-05-31T15:58:51.481Z] Background login status: 200
+[2026-05-31T15:58:51.483Z] Background login success! Updated token.
+[2026-05-31T15:58:51.493Z] Fetching remote insurer orders and policies...
+[2026-05-31T15:58:51.719Z] Orders response status: 200
+[2026-05-31T15:58:51.719Z] Policies response status: 200
+[2026-05-31T15:58:51.723Z] Successfully fetched. rawOrders count: 0, rawPolicies count: 1
+[2026-05-31T15:58:51.738Z] Calculations completed successfully! Sending response.
+[2026-06-01T13:32:48.827Z] GET /api/admin/reports called
+[2026-06-01T13:32:48.842Z] Session user: {"name":"System Admin","email":"admin@marine.test","image":null,"role":"ADMIN","id":"1","companyName":null,"accessToken":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL21hcmluZWluc3VyYW5jZWFwaS5ha2lsaWFwcC5jby50ei9hcGkvdjEvYXV0aC9sb2dpbiIsImlhdCI6MTc4MDMyMDc2NSwiZXhwIjoxNzgwMzI0MzY1LCJuYmYiOjE3ODAzMjA3NjUsImp0aSI6IkRUTU5BWjhWdngyNlptZnIiLCJzdWIiOiIxIiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.2wRzo-ZvczmR2VfhqTjXEZcXOy2QBhMRWM5XcJ9FIHI"}
+[2026-06-01T13:32:48.842Z] Using initial token: Exists
+[2026-06-01T13:32:48.842Z] Attempting dynamic background login as insurer...
+[2026-06-01T13:32:49.640Z] Background login status: 200
+[2026-06-01T13:32:49.640Z] Background login success! Updated token.
+[2026-06-01T13:32:49.640Z] Fetching remote insurer orders and policies...
+[2026-06-01T13:32:49.899Z] Orders response status: 200
+[2026-06-01T13:32:49.899Z] Policies response status: 200
+[2026-06-01T13:32:49.900Z] Successfully fetched. rawOrders count: 0, rawPolicies count: 1
+[2026-06-01T13:32:49.912Z] Calculations completed successfully! Sending response.
+[2026-06-01T13:32:50.067Z] GET /api/admin/reports called
+[2026-06-01T13:32:50.085Z] Session user: {"name":"System Admin","email":"admin@marine.test","image":null,"role":"ADMIN","id":"1","companyName":null,"accessToken":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL21hcmluZWluc3VyYW5jZWFwaS5ha2lsaWFwcC5jby50ei9hcGkvdjEvYXV0aC9sb2dpbiIsImlhdCI6MTc4MDMyMDc2NSwiZXhwIjoxNzgwMzI0MzY1LCJuYmYiOjE3ODAzMjA3NjUsImp0aSI6IkRUTU5BWjhWdngyNlptZnIiLCJzdWIiOiIxIiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.2wRzo-ZvczmR2VfhqTjXEZcXOy2QBhMRWM5XcJ9FIHI"}
+[2026-06-01T13:32:50.086Z] Using initial token: Exists
+[2026-06-01T13:32:50.086Z] Attempting dynamic background login as insurer...
+[2026-06-01T13:32:50.662Z] Background login status: 200
+[2026-06-01T13:32:50.663Z] Background login success! Updated token.
+[2026-06-01T13:32:50.663Z] Fetching remote insurer orders and policies...
+[2026-06-01T13:32:50.759Z] Orders response status: 200
+[2026-06-01T13:32:50.760Z] Policies response status: 200
+[2026-06-01T13:32:50.760Z] Successfully fetched. rawOrders count: 0, rawPolicies count: 1
+[2026-06-01T13:32:50.767Z] Calculations completed successfully! Sending response.
+[2026-06-02T12:27:06.361Z] GET /api/admin/reports called
+[2026-06-02T12:27:06.376Z] Session user: {"name":"System Admin","email":"admin@marine.test","image":null,"role":"ADMIN","id":"1","companyName":null,"accessToken":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL21hcmluZWluc3VyYW5jZWFwaS5ha2lsaWFwcC5jby50ei9hcGkvdjEvYXV0aC9sb2dpbiIsImlhdCI6MTc4MDQwMzIxOCwiZXhwIjoxNzgwNDA2ODE4LCJuYmYiOjE3ODA0MDMyMTgsImp0aSI6InNEcFU2RGo4NlF2R3BFV1kiLCJzdWIiOiIxIiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.638Jb_MG_1jlBW6ysTbiLuengrTW2ilOH2aEyRipMmk"}
+[2026-06-02T12:27:06.376Z] Using initial token: Exists
+[2026-06-02T12:27:06.376Z] Attempting dynamic background login as insurer...
+[2026-06-02T12:27:06.952Z] Background login status: 200
+[2026-06-02T12:27:06.954Z] Background login success! Updated token.
+[2026-06-02T12:27:06.954Z] Fetching remote insurer orders and policies...
+[2026-06-02T12:27:07.071Z] Orders response status: 200
+[2026-06-02T12:27:07.071Z] Policies response status: 200
+[2026-06-02T12:27:07.072Z] Successfully fetched. rawOrders count: 0, rawPolicies count: 1
+[2026-06-02T12:27:07.078Z] Calculations completed successfully! Sending response.
+[2026-06-02T12:27:07.095Z] GET /api/admin/reports called
+[2026-06-02T12:27:07.097Z] Session user: {"name":"System Admin","email":"admin@marine.test","image":null,"role":"ADMIN","id":"1","companyName":null,"accessToken":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL21hcmluZWluc3VyYW5jZWFwaS5ha2lsaWFwcC5jby50ei9hcGkvdjEvYXV0aC9sb2dpbiIsImlhdCI6MTc4MDQwMzIxOCwiZXhwIjoxNzgwNDA2ODE4LCJuYmYiOjE3ODA0MDMyMTgsImp0aSI6InNEcFU2RGo4NlF2R3BFV1kiLCJzdWIiOiIxIiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.638Jb_MG_1jlBW6ysTbiLuengrTW2ilOH2aEyRipMmk"}
+[2026-06-02T12:27:07.097Z] Using initial token: Exists
+[2026-06-02T12:27:07.097Z] Attempting dynamic background login as insurer...
+[2026-06-02T12:27:07.797Z] Background login status: 200
+[2026-06-02T12:27:07.797Z] Background login success! Updated token.
+[2026-06-02T12:27:07.797Z] Fetching remote insurer orders and policies...
+[2026-06-02T12:27:07.882Z] Orders response status: 200
+[2026-06-02T12:27:07.882Z] Policies response status: 200
+[2026-06-02T12:27:07.883Z] Successfully fetched. rawOrders count: 0, rawPolicies count: 1
+[2026-06-02T12:27:07.884Z] Calculations completed successfully! Sending response.

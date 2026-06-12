@@ -143,7 +143,7 @@ export default function AdminReceiptPage() {
                     <div className="bg-gray-50 rounded-lg p-6 text-center mb-8 border border-gray-200">
                         <p className="text-sm font-medium text-gray-600 mb-2">Amount Paid</p>
                         <h3 className="text-4xl font-semibold text-gray-900">
-                            TZS {receipt.amount.toLocaleString()}
+                            Tsh {receipt.amount.toLocaleString()}
                         </h3>
                     </div>
 
@@ -239,7 +239,7 @@ export default function AdminReceiptPage() {
                             <div className="text-center">
                                 <p className="text-sm font-semibold text-gray-900 mb-1">Verification Code</p>
                                 <p className="text-xs text-gray-500 max-w-xs">
-                                    Scan this QR code or visit tiips.co.tz/verify/{receipt.transactionId} to verify this receipt
+                                    Scan this QR code or visit niip.co.tz/verify/{receipt.transactionId} to verify this receipt
                                 </p>
                             </div>
                         </div>
@@ -249,7 +249,7 @@ export default function AdminReceiptPage() {
                 {/* Footer */}
                 <div className="bg-gray-50 border-t border-gray-200 px-8 py-4">
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>TIIPS Payment System</span>
+                        <span>NIIS-T Payment System</span>
                         <span>© {new Date().getFullYear()} All rights reserved</span>
                     </div>
                 </div>

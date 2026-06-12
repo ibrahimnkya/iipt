@@ -19,7 +19,7 @@ import {
     Anchor,
     Truck,
     Plane,
-    DollarSign,
+    Wallet,
     AlertTriangle,
     Clock,
     Settings,
@@ -210,7 +210,7 @@ export default function PolicyDetailsPage() {
     const premiumExample = calculatePremiumExample(100000);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-transparent">
             {/* Sticky Header */}
             <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -348,8 +348,8 @@ export default function PolicyDetailsPage() {
                                     <div>
                                         <p className="text-xs text-gray-500 font-medium mb-1.5">Currency</p>
                                         <div className="flex items-center gap-2">
-                                            <DollarSign className="w-4 h-4 text-gray-500" />
-                                            <p className="text-sm font-semibold text-gray-900">{policy.currency}</p>
+                                            <Wallet className="w-4 h-4 text-gray-500" />
+                                            <p className="text-sm font-semibold text-gray-900">{policy.currency === 'USD' || policy.currency === 'TZS' ? 'Tsh' : policy.currency}</p>
                                         </div>
                                     </div>
                                     <div>
@@ -542,7 +542,7 @@ export default function PolicyDetailsPage() {
                                                     <p className="text-lg font-bold text-blue-600">
                                                         {cover.type === "Percentage" 
                                                             ? `${cover.amount}%` 
-                                                            : `${policy.currency} ${cover.amount.toLocaleString()}`}
+                                                            : `${policy.currency === 'USD' || policy.currency === 'TZS' ? 'Tsh' : policy.currency} ${cover.amount.toLocaleString()}`}
                                                     </p>
                                                 </div>
                                             </div>
@@ -705,13 +705,13 @@ export default function PolicyDetailsPage() {
                             {/* Premium Calculator */}
                             <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 text-white shadow-lg">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <DollarSign className="w-5 h-5 text-emerald-400" />
+                                    <Wallet className="w-5 h-5 text-emerald-400" />
                                     <h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">
                                         Premium Calculator
                                     </h4>
                                 </div>
                                 <p className="text-xs text-gray-400 mb-6">
-                                    Example for {policy.currency} 100,000 cargo value
+                                    Example for {policy.currency === 'USD' || policy.currency === 'TZS' ? 'Tsh' : policy.currency} 100,000 cargo value
                                 </p>
 
                                 <div className="space-y-3 mb-6">
@@ -728,7 +728,7 @@ export default function PolicyDetailsPage() {
                                                 item.value < 0 ? "text-red-400" : "text-white"
                                             )}>
                                                 {item.value < 0 ? "- " : ""}
-                                                {policy.currency} {Math.abs(item.value).toLocaleString()}
+                                                {policy.currency === 'USD' || policy.currency === 'TZS' ? 'Tsh' : policy.currency} {Math.abs(item.value).toLocaleString()}
                                             </span>
                                         </div>
                                     ))}
@@ -742,7 +742,7 @@ export default function PolicyDetailsPage() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-3xl font-bold text-emerald-400">
-                                                {policy.currency} {premiumExample.total.toLocaleString()}
+                                                {policy.currency === 'USD' || policy.currency === 'TZS' ? 'Tsh' : policy.currency} {premiumExample.total.toLocaleString()}
                                             </p>
                                         </div>
                                     </div>

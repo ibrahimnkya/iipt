@@ -1,3 +1,6 @@
+// Ensure we use the correct DATABASE_URL for Docker
+process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://user:password@localhost:5433/tiips_db?schema=public";
+
 import { prisma } from "../index";
 import bcrypt from "bcryptjs";
 
@@ -5,16 +8,16 @@ async function main() {
     console.log("🌱 Starting database seed...");
 
     // Create admin user
-    const adminEmail = "admin@tiip.co.tz";
+    const adminEmail = "admin@iipt.co.tz";
     const adminPassword = "Admin@2025";
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
 
     const admin = await prisma.user.upsert({
         where: { email: adminEmail },
-        update: {},
+        update: { password: hashedAdminPassword },
         create: {
             email: adminEmail,
-            password: hashedPassword,
+            password: hashedAdminPassword,
             fullName: "System Administrator",
             role: "ADMIN",
             phone: "+255000000000",
@@ -27,52 +30,344 @@ async function main() {
 
     console.log("✅ Admin user created:", admin.email);
 
-    // Create Ports
+    // Create Insurers
+    const insurers = [
+        { email: "info@jubilee.co.tz", password: "Ibra@0473", fullName: "Jubilee Insurance" },
+        { email: "info@strategis.co.tz", password: "Pass@123", fullName: "Strategis Insurance" },
+        { email: "info@alliance.co.tz", password: "Pass@123", fullName: "Alliance Insurance" },
+    ];
+
+    for (const insurerData of insurers) {
+        const hashedInsurerPassword = await bcrypt.hash(insurerData.password, 10);
+        await prisma.user.upsert({
+            where: { email: insurerData.email },
+            update: { password: hashedInsurerPassword },
+            create: {
+                email: insurerData.email,
+                password: hashedInsurerPassword,
+                fullName: insurerData.fullName,
+                role: "INSURER",
+                phone: "+255000000000",
+                companyName: insurerData.fullName,
+                status: "APPROVED",
+            },
+        });
+        console.log("✅ Insurer created:", insurerData.email);
+    }
+
+    // Create Normal User
+    const userEmail = "festus@gmail.com";
+    const userPassword = "123456";
+    const hashedUserPassword = await bcrypt.hash(userPassword, 10);
+
+    await prisma.user.upsert({
+        where: { email: userEmail },
+        update: { password: hashedUserPassword },
+        create: {
+            email: userEmail,
+            password: hashedUserPassword,
+            fullName: "Festus User",
+            role: "USER",
+            phone: "+255000000000",
+            status: "APPROVED",
+        },
+    });
+    console.log("✅ Normal user created:", userEmail);
+
+    // Create Ports - Comprehensive Global Seaports Database
     const ports = [
-        // Tanzania
-        { code: "TZDAR", name: "Dar es Salaam Port", country: "TZ" },
-        { code: "TZTGT", name: "Tanga Port", country: "TZ" },
-        { code: "TZMYW", name: "Mtwara Port", country: "TZ" },
-        { code: "TZZNZ", name: "Zanzibar Port", country: "TZ" },
-        { code: "TZJRO", name: "Kilimanjaro Int'l Airport", country: "TZ", type: "AIR" },
-        { code: "TZDAR-AIR", name: "Julius Nyerere Int'l Airport", country: "TZ", type: "AIR" },
+        // ========== AFRICA ==========
+
+        // Algeria
+        { code: "DZALG", name: "Algiers", country: "DZ" },
+        { code: "DZORN", name: "Oran", country: "DZ" },
+        { code: "DZAAE", name: "Annaba", country: "DZ" },
+
+        // Angola
+        { code: "AOLAD", name: "Luanda", country: "AO" },
+        { code: "AOLOB", name: "Lobito", country: "AO" },
+
+        // Benin
+        { code: "BJCOO", name: "Cotonou", country: "BJ" },
+
+        // Cameroon
+        { code: "CMDLA", name: "Douala", country: "CM" },
+        { code: "CMKBI", name: "Kribi", country: "CM" },
+
+        // Djibouti
+        { code: "DJJIB", name: "Port of Djibouti", country: "DJ" },
+
+        // Egypt
+        { code: "EGALY", name: "Alexandria", country: "EG" },
+        { code: "EGPSD", name: "Port Said", country: "EG" },
+        { code: "EGDAM", name: "Damietta", country: "EG" },
+        { code: "EGSUZ", name: "Suez", country: "EG" },
+
+        // Equatorial Guinea
+        { code: "GQSSG", name: "Malabo", country: "GQ" },
+        { code: "GQBSG", name: "Bata", country: "GQ" },
+
+        // Gabon
+        { code: "GALBV", name: "Libreville", country: "GA" },
+        { code: "GAPOG", name: "Port-Gentil", country: "GA" },
+
+        // Ghana
+        { code: "GHTEM", name: "Tema", country: "GH" },
+        { code: "GHTKD", name: "Takoradi", country: "GH" },
+
+        // Ivory Coast
+        { code: "CIABJ", name: "Abidjan", country: "CI" },
 
         // Kenya
-        { code: "KEMBA", name: "Mombasa Port", country: "KE" },
-        { code: "KENBO", name: "Nairobi ICD", country: "KE", type: "LAND" },
+        { code: "KEMBA", name: "Mombasa", country: "KE" },
 
-        // China
-        { code: "CNSHG", name: "Shanghai Port", country: "CN" },
-        { code: "CNNSA", name: "Nansha Port", country: "CN" },
-        { code: "CNSZX", name: "Shenzhen Port", country: "CN" },
-        { code: "CNHKA", name: "Hong Kong Port", country: "CN" },
-        { code: "CNNING", name: "Ningbo-Zhoushan Port", country: "CN" },
-        { code: "CNQIN", name: "Qingdao Port", country: "CN" },
+        // Liberia
+        { code: "LRMLW", name: "Monrovia", country: "LR" },
 
-        // India
-        { code: "INNSA", name: "Nhava Sheva (JNPT)", country: "IN" },
-        { code: "INMUN", name: "Mundra Port", country: "IN" },
-        { code: "INMAA", name: "Chennai Port", country: "IN" },
+        // Libya
+        { code: "LYTIP", name: "Tripoli", country: "LY" },
+        { code: "LYBEN", name: "Benghazi", country: "LY" },
 
-        // UAE
-        { code: "AEJAB", name: "Jebel Ali Port (Dubai)", country: "AE" },
-        { code: "AEAUH", name: "Khalifa Port (Abu Dhabi)", country: "AE" },
+        // Madagascar
+        { code: "MGTMM", name: "Toamasina", country: "MG" },
+
+        // Mauritius
+        { code: "MUPLU", name: "Port Louis", country: "MU" },
+
+        // Morocco
+        { code: "MATNG", name: "Tanger Med", country: "MA" },
+        { code: "MACAS", name: "Casablanca", country: "MA" },
+
+        // Mozambique
+        { code: "MZMPM", name: "Maputo", country: "MZ" },
+        { code: "MZBEW", name: "Beira", country: "MZ" },
+        { code: "MZMCM", name: "Nacala", country: "MZ" },
+
+        // Namibia
+        { code: "NAWVB", name: "Walvis Bay", country: "NA" },
+
+        // Nigeria
+        { code: "NGLOS", name: "Lagos (Apapa)", country: "NG" },
+        { code: "NGTCN", name: "Tin Can Island", country: "NG" },
+        { code: "NGPHC", name: "Port Harcourt", country: "NG" },
+
+        // Senegal
+        { code: "SNDKR", name: "Dakar", country: "SN" },
+
+        // Seychelles
+        { code: "SCVIC", name: "Port Victoria", country: "SC" },
+
+        // Sierra Leone
+        { code: "SLFNA", name: "Freetown", country: "SL" },
+
+        // Somalia
+        { code: "SOMGQ", name: "Mogadishu", country: "SO" },
+        { code: "SOMGQ", name: "Berbera", country: "SO" },
 
         // South Africa
-        { code: "ZADUR", name: "Durban Port", country: "ZA" },
-        { code: "ZACPT", name: "Cape Town Port", country: "ZA" },
+        { code: "ZADUR", name: "Durban", country: "ZA" },
+        { code: "ZACPT", name: "Cape Town", country: "ZA" },
+        { code: "ZAPLZ", name: "Port Elizabeth", country: "ZA" },
+        { code: "ZARBY", name: "Richards Bay", country: "ZA" },
 
-        // USA
-        { code: "USNYC", name: "Port of New York and New Jersey", country: "US" },
-        { code: "USLAX", name: "Port of Los Angeles", country: "US" },
+        // Sudan
+        { code: "SDPZU", name: "Port Sudan", country: "SD" },
 
-        // UK
-        { code: "GBFXT", name: "Port of Felixstowe", country: "GB" },
-        { code: "GBSOU", name: "Port of Southampton", country: "GB" },
+        // Tanzania
+        { code: "TZDAR", name: "Dar es Salaam", country: "TZ" },
+        { code: "TZTGT", name: "Tanga", country: "TZ" },
+        { code: "TZMYW", name: "Mtwara", country: "TZ" },
+
+        // Togo
+        { code: "TGLFW", name: "Lomé", country: "TG" },
+
+        // Tunisia
+        { code: "TNTUN", name: "Tunis", country: "TN" },
+        { code: "TNSFX", name: "Sfax", country: "TN" },
+
+        // ========== ASIA ==========
+
+        // China
+        { code: "CNSHA", name: "Shanghai", country: "CN" },
+        { code: "CNSZX", name: "Shenzhen", country: "CN" },
+        { code: "CNNGB", name: "Ningbo-Zhoushan", country: "CN" },
+        { code: "CNCAN", name: "Guangzhou", country: "CN" },
+        { code: "CNTAO", name: "Qingdao", country: "CN" },
+
+        // India
+        { code: "INBOM", name: "Mumbai", country: "IN" },
+        { code: "INNSA", name: "Jawaharlal Nehru (Nhava Sheva)", country: "IN" },
+        { code: "INMAA", name: "Chennai", country: "IN" },
+        { code: "INCCU", name: "Kolkata", country: "IN" },
 
         // Japan
-        { code: "JPTYO", name: "Port of Tokyo", country: "JP" },
-        { code: "JPYOK", name: "Port of Yokohama", country: "JP" },
+        { code: "JPTYO", name: "Tokyo", country: "JP" },
+        { code: "JPYOK", name: "Yokohama", country: "JP" },
+        { code: "JPOSA", name: "Osaka", country: "JP" },
+        { code: "JPUKB", name: "Kobe", country: "JP" },
+
+        // South Korea
+        { code: "KRPUS", name: "Busan", country: "KR" },
+        { code: "KRINC", name: "Incheon", country: "KR" },
+
+        // Singapore
+        { code: "SGSIN", name: "Port of Singapore", country: "SG" },
+
+        // Malaysia
+        { code: "MYPKG", name: "Port Klang", country: "MY" },
+        { code: "MYTPP", name: "Tanjung Pelepas", country: "MY" },
+
+        // Indonesia
+        { code: "IDJKT", name: "Tanjung Priok (Jakarta)", country: "ID" },
+        { code: "IDSUB", name: "Surabaya", country: "ID" },
+
+        // Thailand
+        { code: "THLCH", name: "Laem Chabang", country: "TH" },
+        { code: "THBKK", name: "Bangkok", country: "TH" },
+
+        // Vietnam
+        { code: "VNHPH", name: "Hai Phong", country: "VN" },
+        { code: "VNSGN", name: "Ho Chi Minh City", country: "VN" },
+
+        // Philippines
+        { code: "PHMNL", name: "Manila", country: "PH" },
+        { code: "PHCEB", name: "Cebu", country: "PH" },
+
+        // Pakistan
+        { code: "PKKHI", name: "Karachi", country: "PK" },
+        { code: "PKQCT", name: "Port Qasim", country: "PK" },
+
+        // Bangladesh
+        { code: "BDCGP", name: "Chittagong", country: "BD" },
+
+        // Sri Lanka
+        { code: "LKCMB", name: "Colombo", country: "LK" },
+
+        // UAE
+        { code: "AEJEA", name: "Jebel Ali", country: "AE" },
+        { code: "AEDXB", name: "Port Rashid", country: "AE" },
+
+        // Saudi Arabia
+        { code: "SAJED", name: "Jeddah Islamic Port", country: "SA" },
+        { code: "SADMM", name: "Dammam", country: "SA" },
+
+        // Qatar
+        { code: "QADOH", name: "Hamad Port", country: "QA" },
+
+        // Oman
+        { code: "OMSLL", name: "Salalah", country: "OM" },
+        { code: "OMSOH", name: "Sohar", country: "OM" },
+
+        // ========== EUROPE ==========
+
+        // Netherlands
+        { code: "NLRTM", name: "Rotterdam", country: "NL" },
+
+        // Belgium
+        { code: "BEANR", name: "Antwerp", country: "BE" },
+
+        // Germany
+        { code: "DEHAM", name: "Hamburg", country: "DE" },
+        { code: "DEBRV", name: "Bremerhaven", country: "DE" },
+
+        // France
+        { code: "FRMRS", name: "Marseille", country: "FR" },
+        { code: "FRLEH", name: "Le Havre", country: "FR" },
+
+        // Spain
+        { code: "ESVLC", name: "Valencia", country: "ES" },
+        { code: "ESBCN", name: "Barcelona", country: "ES" },
+        { code: "ESALG", name: "Algeciras", country: "ES" },
+
+        // Italy
+        { code: "ITGOA", name: "Genoa", country: "IT" },
+        { code: "ITNAP", name: "Naples", country: "IT" },
+
+        // Greece
+        { code: "GRPIR", name: "Piraeus", country: "GR" },
+
+        // UK
+        { code: "GBFXT", name: "Felixstowe", country: "GB" },
+        { code: "GBSOU", name: "Southampton", country: "GB" },
+
+        // Turkey
+        { code: "TRAMB", name: "Ambarli", country: "TR" },
+        { code: "TRMER", name: "Mersin", country: "TR" },
+
+        // Portugal
+        { code: "PTLIS", name: "Lisbon", country: "PT" },
+        { code: "PTSIN", name: "Sines", country: "PT" },
+
+        // Poland
+        { code: "PLGDN", name: "Gdansk", country: "PL" },
+
+        // Norway
+        { code: "NOOSL", name: "Oslo", country: "NO" },
+
+        // Sweden
+        { code: "SEGOT", name: "Gothenburg", country: "SE" },
+
+        // Denmark
+        { code: "DKCPH", name: "Copenhagen", country: "DK" },
+
+        // ========== NORTH AMERICA ==========
+
+        // USA
+        { code: "USLAX", name: "Los Angeles", country: "US" },
+        { code: "USLGB", name: "Long Beach", country: "US" },
+        { code: "USNYC", name: "New York/New Jersey", country: "US" },
+        { code: "USSAV", name: "Savannah", country: "US" },
+        { code: "USHOU", name: "Houston", country: "US" },
+
+        // Canada
+        { code: "CAVAN", name: "Vancouver", country: "CA" },
+        { code: "CAMTR", name: "Montreal", country: "CA" },
+        { code: "CAHAL", name: "Halifax", country: "CA" },
+
+        // Mexico
+        { code: "MXZLO", name: "Manzanillo", country: "MX" },
+        { code: "MXVER", name: "Veracruz", country: "MX" },
+        { code: "MXLZC", name: "Lazaro Cardenas", country: "MX" },
+
+        // Panama
+        { code: "PABLB", name: "Balboa", country: "PA" },
+        { code: "PAONX", name: "Colon", country: "PA" },
+
+        // ========== SOUTH AMERICA ==========
+
+        // Brazil
+        { code: "BRSSZ", name: "Santos", country: "BR" },
+        { code: "BRRIO", name: "Rio de Janeiro", country: "BR" },
+
+        // Argentina
+        { code: "ARBUE", name: "Buenos Aires", country: "AR" },
+
+        // Chile
+        { code: "CLVAP", name: "Valparaíso", country: "CL" },
+
+        // Peru
+        { code: "PECLL", name: "Callao", country: "PE" },
+
+        // Colombia
+        { code: "COCTG", name: "Cartagena", country: "CO" },
+
+        // Ecuador
+        { code: "ECGYE", name: "Guayaquil", country: "EC" },
+
+        // Uruguay
+        { code: "UYMVD", name: "Montevideo", country: "UY" },
+
+        // ========== OCEANIA ==========
+
+        // Australia
+        { code: "AUMEL", name: "Melbourne", country: "AU" },
+        { code: "AUSYD", name: "Sydney", country: "AU" },
+        { code: "AUBNE", name: "Brisbane", country: "AU" },
+        { code: "AUPER", name: "Fremantle", country: "AU" },
+
+        // New Zealand
+        { code: "NZAKL", name: "Auckland", country: "NZ" },
+        { code: "NZTRG", name: "Tauranga", country: "NZ" },
     ];
 
     console.log(`Creating ${ports.length} ports...`);
@@ -118,6 +413,65 @@ async function main() {
                 code: hscode.code,
                 description: hscode.description,
                 category: hscode.category,
+            },
+        });
+    }
+
+    // Create Policies
+    const policies = [
+        {
+            name: "Marine Cargo (All Risks)",
+            code: "ICC-A-001",
+            clauseType: "ICC(A)",
+            description: "Coverage for all risks of loss of or damage to the subject-matter insured except as excluded.",
+            rate: 0.75,
+            minPremium: 50,
+            transportModes: ["SEA", "AIR"],
+            cargoTypes: ["GENERAL"],
+            incoterms: ["CIF", "CIP", "CFR", "CPT"],
+        },
+        {
+            name: "Marine Cargo (Basic Cover)",
+            code: "ICC-C-001",
+            clauseType: "ICC(C)",
+            description: "Coverage for major casualties such as fire, stranding, sinking, collision, etc.",
+            rate: 0.45,
+            minPremium: 30,
+            transportModes: ["SEA"],
+            cargoTypes: ["GENERAL", "BULK"],
+            incoterms: ["FOB", "CFR"],
+        },
+        {
+            name: "Goods in Transit (Road/Rail)",
+            code: "GIT-001",
+            clauseType: "GIT",
+            description: "Coverage for loss or damage to goods while in transit by road or rail within Tanzania and neighbors.",
+            rate: 0.60,
+            minPremium: 40,
+            transportModes: ["ROAD", "RAIL"],
+            cargoTypes: ["GENERAL"],
+            incoterms: ["EXW", "DDP", "DAP"],
+        }
+    ];
+
+    console.log(`Creating ${policies.length} insurance policies...`);
+    for (const policy of policies) {
+        await prisma.insurancePolicy.upsert({
+            where: { code: policy.code },
+            update: {},
+            create: {
+                name: policy.name,
+                code: policy.code,
+                clauseType: policy.clauseType,
+                description: policy.description,
+                rate: policy.rate,
+                minPremium: policy.minPremium,
+                transportModes: policy.transportModes,
+                cargoTypes: policy.cargoTypes,
+                incoterms: policy.incoterms,
+                startDate: new Date(),
+                autoInvoice: true,
+                autoIssue: true,
             },
         });
     }

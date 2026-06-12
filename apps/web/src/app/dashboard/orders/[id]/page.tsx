@@ -17,7 +17,7 @@ import {
     Truck,
     MapPin,
     Calendar,
-    DollarSign,
+    Wallet,
     Shield,
     Box,
     Globe,
@@ -32,6 +32,7 @@ import {
     Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PdfGenerator } from "@/lib/pdfGenerator";
 
 interface Order {
@@ -185,13 +186,122 @@ export default function ViewOrderPage() {
 
     if (status === "loading" || loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                <div className="text-center">
-                    <div className="relative w-16 h-16 mx-auto mb-4">
-                        <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-                        <div className="absolute inset-0 border-4 border-brand-green border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-gray-50 -m-8 p-8 font-sans space-y-6">
+                {/* Header skeleton */}
+                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-4">
+                        <Skeleton className="w-10 h-10 rounded-lg" />
+                        <div className="space-y-1.5">
+                            <Skeleton className="h-6 w-32 rounded" />
+                            <Skeleton className="h-4 w-48 rounded" />
+                        </div>
                     </div>
-                    <p className="text-gray-600 font-medium">Loading order details...</p>
+                    <div className="flex gap-3">
+                        <Skeleton className="h-10 w-28 rounded-lg" />
+                        <Skeleton className="h-10.5 w-28 rounded-lg" />
+                    </div>
+                </div>
+
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {/* Status Banner skeleton */}
+                    <Skeleton className="h-24 w-full rounded-lg" />
+
+                    {/* Main Content Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left main block skeleton */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Shipment Journey Card */}
+                            <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="w-10 h-10 rounded-lg animate-pulse" />
+                                    <div className="space-y-1.5">
+                                        <Skeleton className="h-4.5 w-40 rounded" />
+                                        <Skeleton className="h-3 w-32 rounded" />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4 justify-between border-t border-slate-100 pt-6">
+                                    <div className="flex flex-col items-center space-y-2 flex-1">
+                                        <Skeleton className="w-12 h-12 rounded-full" />
+                                        <Skeleton className="h-4 w-24 rounded" />
+                                    </div>
+                                    <Skeleton className="h-8 w-20 rounded-lg" />
+                                    <div className="flex flex-col items-center space-y-2 flex-1">
+                                        <Skeleton className="w-12 h-12 rounded-full" />
+                                        <Skeleton className="h-4 w-24 rounded" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Cargo & Financials Card */}
+                            <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="w-10 h-10 rounded-lg" />
+                                    <div className="space-y-1.5">
+                                        <Skeleton className="h-4.5 w-40 rounded" />
+                                        <Skeleton className="h-3 w-32 rounded" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {[1, 2, 3, 4].map((i) => (
+                                        <div key={i} className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+                                            <Skeleton className="h-3 w-20 rounded" />
+                                            <Skeleton className="h-6 w-32 rounded" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right sidebar skeleton */}
+                        <div className="space-y-6">
+                            {/* Insurance Policy */}
+                            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="p-5 bg-gray-900 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Skeleton className="w-10 h-10 bg-slate-800 rounded-lg" />
+                                        <div className="space-y-1.5">
+                                            <Skeleton className="h-4 w-32 bg-slate-800 rounded" />
+                                            <Skeleton className="h-3 w-24 bg-slate-800 rounded" />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-end border-t border-slate-850 pt-4">
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-3 w-20 bg-slate-800 rounded" />
+                                            <Skeleton className="h-4 w-36 bg-slate-800 rounded" />
+                                        </div>
+                                        <Skeleton className="h-6 w-16 bg-slate-800 rounded" />
+                                    </div>
+                                </div>
+                                <div className="p-5 bg-gray-50 space-y-2">
+                                    <Skeleton className="h-3.5 w-32 rounded" />
+                                    <Skeleton className="h-3 w-full rounded" />
+                                    <Skeleton className="h-3 w-5/6 rounded" />
+                                </div>
+                            </div>
+
+                            {/* Invoice details skeleton */}
+                            <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="w-10 h-10 rounded-lg" />
+                                    <div className="space-y-1.5">
+                                        <Skeleton className="h-4.5 w-24 rounded" />
+                                        <Skeleton className="h-3 w-32 rounded" />
+                                    </div>
+                                </div>
+                                <div className="space-y-3 pt-2">
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-3 w-24 rounded" />
+                                        <Skeleton className="h-8 w-full rounded-md" />
+                                    </div>
+                                    <div className="flex justify-between items-center border-t border-slate-100 pt-3">
+                                        <Skeleton className="h-4 w-16 rounded" />
+                                        <Skeleton className="h-5 w-24 rounded" />
+                                    </div>
+                                    <Skeleton className="h-10 w-full rounded-lg" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -457,7 +567,7 @@ export default function ViewOrderPage() {
                             <div className="p-5 border-b border-gray-200">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                                        <DollarSign className="w-5 h-5 text-gray-600" />
+                                        <Wallet className="w-5 h-5 text-gray-600" />
                                     </div>
                                     <div>
                                         <h2 className="text-lg font-semibold text-gray-900">Financial Details</h2>
@@ -478,7 +588,7 @@ export default function ViewOrderPage() {
                                             </label>
                                         </div>
                                         <p className="text-2xl font-semibold text-gray-900">
-                                            {order.currency} {order.invoiceValue.toLocaleString()}
+                                            {order.currency === 'USD' || order.currency === 'TZS' ? 'Tsh' : order.currency} {order.invoiceValue.toLocaleString()}
                                         </p>
                                     </div>
 
@@ -492,7 +602,7 @@ export default function ViewOrderPage() {
                                             </label>
                                         </div>
                                         <p className="text-2xl font-semibold text-emerald-700">
-                                            {order.currency} {order.sumInsured.toLocaleString()}
+                                            {order.currency === 'USD' || order.currency === 'TZS' ? 'Tsh' : order.currency} {order.sumInsured.toLocaleString()}
                                         </p>
                                     </div>
                                 </div>
@@ -582,7 +692,7 @@ export default function ViewOrderPage() {
                                             Amount
                                         </label>
                                         <p className="text-xl font-semibold text-gray-900">
-                                            {order.currency} {order.invoice.amount.toLocaleString()}
+                                            {order.currency === 'USD' || order.currency === 'TZS' ? 'Tsh' : order.currency} {order.invoice.amount.toLocaleString()}
                                         </p>
                                     </div>
 

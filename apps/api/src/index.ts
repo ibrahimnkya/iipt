@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/health", (req, res) => {
-    res.json({ status: "ok", service: "TIIPS API" });
+    res.json({ status: "ok", service: "IIPT API" });
 });
 
 app.get("/api/test-db", async (req, res) => {
@@ -25,5 +25,5 @@ app.get("/api/test-db", async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`TIIPS API listening at http://localhost:${port}`);
+    console.log(`IIPT API listening at http://localhost:${port}`);
 });

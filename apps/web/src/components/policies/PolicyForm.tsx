@@ -3,6 +3,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
     Save,
     Trash2,
@@ -35,6 +36,7 @@ interface PolicyFormProps {
 
 export function PolicyForm({ initialData, isEditing = false }: PolicyFormProps) {
     const router = useRouter();
+    const { data: session } = useSession();
     const [loading, setLoading] = useState(false);
 
     const defaultState = {
@@ -122,16 +124,22 @@ export function PolicyForm({ initialData, isEditing = false }: PolicyFormProps) 
             if (isEditing && initialData?.id) {
                 await PolicyService.update(initialData.id, policyForm);
                 toast.success("Policy updated successfully");
-                router.push(`/admin/policies/${initialData.id}`);
+
+                // Role-based redirect
+                const basePath = session?.user?.role === "ADMIN" ? "/admin" : "/dashboard";
+                router.push(`${basePath}/policies/${initialData.id}`);
             } else {
                 await PolicyService.create(policyForm);
                 toast.success("Policy created successfully");
-                router.push("/admin/policies");
+
+                // Role-based redirect
+                const basePath = session?.user?.role === "ADMIN" ? "/admin" : "/dashboard";
+                router.push(`${basePath}/policies`);
             }
             router.refresh();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error saving policy", error);
-            toast.error("Failed to save policy");
+            toast.error(error.message || "Failed to save policy");
         } finally {
             setLoading(false);
         }
@@ -196,7 +204,7 @@ export function PolicyForm({ initialData, isEditing = false }: PolicyFormProps) 
                             <input
                                 type="text"
                                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/20 focus:border-brand-green transition-all"
-                                placeholder="e.g., TIIPS-MC-ICC-A"
+                                placeholder="e.g., NIIS-T-MC-ICC-A"
                                 value={policyForm.code}
                                 onChange={(e) => setPolicyForm({ ...policyForm, code: e.target.value })}
                             />

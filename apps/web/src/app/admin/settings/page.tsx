@@ -32,8 +32,8 @@ export default function AdminSettingsPage() {
     const [activeTab, setActiveTab] = useState("general");
 
     const [settings, setSettings] = useState({
-        siteName: "TIIPS",
-        siteEmail: "admin@tiips.co.tz",
+        siteName: "NIIS-T",
+        siteEmail: "admin@niip.co.tz",
         enableNotifications: true,
         enableEmailAlerts: true,
         maintenanceMode: false,
@@ -83,7 +83,7 @@ export default function AdminSettingsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -463,8 +463,8 @@ export default function AdminSettingsPage() {
 
                             <div className="space-y-3">
                                 {[
-                                    { action: "VAT rate updated to 18%", user: "Admin TIIPS", time: "2 days ago" },
-                                    { action: "Email alerts enabled", user: "Admin TIIPS", time: "5 days ago" },
+                                    { action: "VAT rate updated to 18%", user: "Admin NIIS-T", time: "2 days ago" },
+                                    { action: "Email alerts enabled", user: "Admin NIIS-T", time: "5 days ago" },
                                     { action: "Default currency changed to TZS", user: "System", time: "1 week ago" },
                                 ].map((log, i) => (
                                     <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -497,7 +497,7 @@ export default function AdminSettingsPage() {
                                 <Cpu className="w-6 h-6 text-brand-green" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium text-gray-600">TIIPS Version</p>
+                                <p className="text-sm font-medium text-gray-600">NIIS-T Version</p>
                                 <p className="text-xl font-bold text-gray-900">2.4.0-pro</p>
                             </div>
                         </div>

@@ -21,7 +21,7 @@ import {
     List,
     AlertCircle,
     Package,
-    DollarSign,
+    Wallet,
     TrendingUp
 } from "lucide-react";
 
@@ -199,8 +199,8 @@ export default function AdminDeclarationsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="min-h-screen bg-transparent">
+            <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -276,12 +276,12 @@ export default function AdminDeclarationsPage() {
                         <div className="bg-white rounded-lg p-4 border border-gray-200">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                    <DollarSign className="w-5 h-5 text-gray-600" />
+                                    <Wallet className="w-5 h-5 text-gray-600" />
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Total Value</p>
                                     <p className="text-xl font-bold text-gray-900">
-                                        {(stats.totalValue / 1000000).toFixed(1)}M
+                                        Tsh {(stats.totalValue / 1000000).toFixed(1)}M
                                     </p>
                                 </div>
                             </div>
@@ -440,7 +440,7 @@ export default function AdminDeclarationsPage() {
                                                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
                                                     <p className="text-xs text-gray-500 font-medium mb-1">Declared Value</p>
                                                     <p className="text-2xl font-bold text-gray-900">
-                                                        TZS {dec.value.toLocaleString()}
+                                                        Tsh {dec.value.toLocaleString()}
                                                     </p>
                                                 </div>
 
@@ -564,7 +564,7 @@ export default function AdminDeclarationsPage() {
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <span className="font-semibold text-gray-900 text-sm">
-                                                                TZS {dec.value.toLocaleString()}
+                                                                Tsh {dec.value.toLocaleString()}
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4">

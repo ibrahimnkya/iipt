@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
     BarChart3,
     TrendingUp,
-    DollarSign,
+    Wallet,
     Package,
     FileText,
     Users,
@@ -22,7 +22,8 @@ import {
     XCircle,
     Anchor,
     Truck,
-    Plane
+    Plane,
+    AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +56,7 @@ export default function AdminReportsPage() {
         airCargo: 0,
     });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState("30days");
 
     useEffect(() => {
@@ -72,16 +74,20 @@ export default function AdminReportsPage() {
     }, [session]);
 
     const fetchStats = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const res = await fetch("/api/admin/reports");
             if (res.ok) {
                 const data = await res.json();
                 setStats(data);
             } else {
-                console.error("Failed to fetch reports");
+                console.warn("Failed to fetch reports from /api/admin/reports");
+                setError("Failed to load system reports from the remote REST API.");
             }
-        } catch (error) {
-            console.error("Error fetching reports:", error);
+        } catch (err) {
+            console.warn("Error fetching reports:", err);
+            setError("Could not connect to the reports API. Please check your network connection.");
         } finally {
             setLoading(false);
         }
@@ -106,7 +112,7 @@ export default function AdminReportsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-transparent">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -133,6 +139,27 @@ export default function AdminReportsPage() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Error Banner */}
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50/80 backdrop-blur border border-red-200 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <AlertCircle className="w-5 h-5 text-red-600" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-red-900">API Connection Issue</p>
+                                    <p className="text-xs text-red-600">{error}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={fetchStats}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm active:scale-95"
+                            >
+                                Retry Connection
+                            </button>
+                        </div>
+                    )}
 
                     {/* Period Selector */}
                     <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
@@ -171,7 +198,7 @@ export default function AdminReportsPage() {
                                 value: `TZS ${(stats.totalRevenue / 1000000).toFixed(2)}M`,
                                 trend: "+12.5%",
                                 positive: true,
-                                icon: DollarSign,
+                                icon: Wallet,
                                 bg: "bg-emerald-50",
                                 iconBg: "bg-emerald-100",
                                 iconColor: "text-emerald-600",
