@@ -9,12 +9,15 @@ import {
     User2,
     LogOut,
     Activity,
-    ChevronDown
+    ChevronDown,
+    Menu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function DashboardTopbar() {
     const { data: session } = useSession();
+    const { toggleSidebar } = useSidebar();
     const router = useRouter();
     const [profileOpen, setProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
@@ -44,6 +47,27 @@ export function DashboardTopbar() {
 
     return (
         <div className="w-full bg-white/70 backdrop-blur-md border-b border-slate-200/40 px-6 sm:px-8 py-3 flex items-center justify-between sticky top-0 z-30 font-sans transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.01)]">
+            {/* Left side actions */}
+            <div className="flex items-center gap-2.5 min-w-0">
+                {/* Mobile Sidebar Toggle Hamburger */}
+                <button
+                    type="button"
+                    onClick={toggleSidebar}
+                    className="lg:hidden p-2 -ml-2 rounded-xl text-slate-650 hover:bg-slate-100 active:scale-95 transition-all mr-2 flex items-center justify-center cursor-pointer"
+                    aria-label="Toggle navigation menu"
+                >
+                    <Menu className="w-5 h-5 text-slate-700" />
+                </button>
+
+                {/* Mobile Logo & Brand */}
+                <div className="flex lg:hidden items-center gap-2 select-none flex-shrink-0">
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-brand-green/20 border border-brand-green/30">
+                        <img src="/logo.svg" alt="NIIS-T Logo" className="w-5 h-5" />
+                    </div>
+                    <span className="font-black text-slate-800 text-sm tracking-tight">NIIS-T</span>
+                </div>
+            </div>
+
             {/* Search Input Mockup */}
             <div className="hidden md:flex items-center gap-2.5 bg-slate-50/70 border border-slate-200/50 rounded-xl px-3.5 py-1.5 w-80 focus-within:bg-white focus-within:border-brand-green/50 focus-within:ring-4 focus-within:ring-brand-green/5 focus-within:shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:bg-slate-100/40 hover:border-slate-300/60 transition-all duration-350 shadow-sm group">
                 <Search className="w-4 h-4 text-slate-400 group-focus-within:text-brand-green group-focus-within:scale-105 transition-all duration-300 flex-shrink-0" />
@@ -56,9 +80,6 @@ export function DashboardTopbar() {
                     ⌘K
                 </kbd>
             </div>
-
-            {/* Empty space for mobile layouts */}
-            <div className="md:hidden w-8" />
 
             {/* Right-side actions */}
             <div className="flex items-center gap-4">
@@ -83,7 +104,7 @@ export function DashboardTopbar() {
                             )}
                             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                         </div>
-                        <div className="hidden sm:block text-left">
+                        <div className="hidden lg:block text-left">
                             <p className="text-xs font-bold text-slate-800 leading-tight truncate max-w-28">
                                 {session.user?.companyName || session.user?.fullName?.split(" ")[0] || session.user?.name}
                             </p>

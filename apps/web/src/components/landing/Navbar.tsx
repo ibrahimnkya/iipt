@@ -168,8 +168,8 @@ export default function Navbar() {
             {/* Mobile Navigation Drawer */}
             <div
                 className={cn(
-                    "absolute left-4 right-4 mt-3 md:hidden bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl transition-all duration-300 overflow-hidden shadow-xl",
-                    mobileMenuOpen ? "max-h-[300px] opacity-100 py-6 px-6" : "max-h-0 opacity-0 py-0 px-6 pointer-events-none"
+                    "absolute left-4 right-4 mt-3 md:hidden bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl transition-all duration-300 shadow-xl overflow-y-auto",
+                    mobileMenuOpen ? "max-h-[450px] opacity-100 py-6 px-6" : "max-h-0 opacity-0 py-0 px-6 pointer-events-none"
                 )}
             >
                 <div className="flex flex-col gap-3">

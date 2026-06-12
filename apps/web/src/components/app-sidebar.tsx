@@ -37,6 +37,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
     SidebarRail,
+    useSidebar,
 } from "@/components/ui/sidebar";
 import {
     DropdownMenu,
@@ -52,19 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const isAdmin = session?.user?.role === "ADMIN";
-    const [mobileOpen, setMobileOpen] = React.useState(false);
-
-    // Lock body scroll when mobile menu is open
-    React.useEffect(() => {
-        if (mobileOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [mobileOpen]);
+    const { openMobile, setOpenMobile } = useSidebar();
 
     const userNavItems = [
         {
@@ -179,7 +168,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     };
 
     const closeMobileMenu = () => {
-        setMobileOpen(false);
+        setOpenMobile(false);
     };
 
     const handleLogout = async () => {
@@ -195,38 +184,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             : userNavItems;
 
     return (
-        <>
-            {/* Mobile Menu Button */}
-            <button
-                onClick={() => setMobileOpen(!mobileOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 w-11 h-11 bg-gray-900 border border-gray-700 rounded-lg flex items-center justify-center text-white hover:bg-gray-800 transition-all shadow-lg hover:shadow-xl active:scale-95"
-                aria-label="Toggle menu"
-            >
-                {mobileOpen ? (
-                    <X className="w-5 h-5 transition-transform duration-200" />
-                ) : (
-                    <Menu className="w-5 h-5 transition-transform duration-200" />
-                )}
-            </button>
-
-            {/* Mobile Overlay */}
-            {mobileOpen && (
-                <div
-                    className="lg:hidden fixed inset-0 bg-black/60 z-30 backdrop-blur-sm animate-in fade-in duration-200"
-                    onClick={closeMobileMenu}
-                />
+        <Sidebar
+            collapsible="icon"
+            {...props}
+            className={cn(
+                "floating-sidebar border-r border-gray-200/50 bg-[#0F172A]",
+                props.className
             )}
-
-            <Sidebar
-                collapsible="icon"
-                {...props}
-                className={cn(
-                    "floating-sidebar transition-all duration-300 ease-in-out border-r border-gray-200/50 fixed top-0 left-0 h-screen z-40 bg-[#0F172A]",
-                    mobileOpen
-                        ? "translate-x-0 shadow-2xl animate-in slide-in-from-left duration-300"
-                        : "-translate-x-full lg:translate-x-0"
-                )}
-            >
+        >
                 {/* Gradient Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-green/20 via-brand-blue/10 to-transparent opacity-50 pointer-events-none rounded-2xl" />
 
@@ -362,6 +327,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarFooter>
                 <SidebarRail />
             </Sidebar>
-        </>
     );
 }

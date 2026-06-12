@@ -640,33 +640,33 @@ export default function CreateOrderPage() {
 
             {/* Header with Glassmorphism */}
             <div className="bg-white/70 backdrop-blur-md border-b border-slate-200/40 sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4 min-w-0">
+                <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-2.5 sm:py-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                             <button
                                 type="button"
                                 onClick={() => router.back()}
-                                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-slate-50 hover:border-slate-350 active:scale-95 transition-all duration-200 flex-shrink-0 border border-slate-200/80 bg-white cursor-pointer shadow-sm"
+                                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center hover:bg-slate-50 hover:border-slate-350 active:scale-95 transition-all duration-200 flex-shrink-0 border border-slate-200/80 bg-white cursor-pointer shadow-sm"
                             >
                                 <ArrowLeft className="w-4 h-4 text-slate-700" strokeWidth={2.5} />
                             </button>
                             <div className="min-w-0">
-                                <h1 className="text-lg font-bold text-slate-900 tracking-tight truncate">
+                                <h1 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 tracking-tight truncate">
                                     Insurance Proposal Form
                                 </h1>
-                                <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
+                                <div className="text-[10px] sm:text-xs text-slate-500 flex items-center gap-1.5 mt-0.5 font-medium">
                                     <span className="relative flex h-2 w-2">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-green/70 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-green shadow-[0_0_8px_rgba(61,164,78,0.5)]"></span>
                                     </span>
-                                    <span>Step {currentStep + 1} of {STEPS.length} &bull; {STEPS[currentStep].title}</span>
+                                    <span className="truncate">Step {currentStep + 1} of {STEPS.length} &bull; {STEPS[currentStep].title}</span>
                                 </div>
                             </div>
                         </div>
                         {/* Progress indicator badge */}
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-sm">
-                                <span>Completion:</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-1.5 bg-white border border-slate-200/80 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 shadow-sm">
+                                <span className="hidden sm:inline">Completion:</span>
                                 <span className="text-brand-green font-extrabold">{Math.round(((currentStep + 1) / STEPS.length) * 100)}%</span>
                             </div>
                         </div>
