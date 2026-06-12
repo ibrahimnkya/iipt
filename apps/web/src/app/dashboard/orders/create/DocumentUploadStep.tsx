@@ -807,23 +807,23 @@ export default function DocumentUploadStep({
                                 type="button"
                                 onClick={() => setSelectedDocType(dt.id)}
                                 className={cn(
-                                    "relative p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer",
+                                    "relative p-4 rounded-2xl border text-left transition-all duration-300 cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
                                     active
-                                        ? `${dt.bg} ${dt.border} ring-1 ring-offset-0 shadow-sm`
-                                        : "bg-slate-50/60 border-slate-200 hover:bg-white hover:border-slate-300 hover:shadow-sm"
+                                        ? `${dt.bg} ${dt.border} ring-1 ring-brand-green/5 shadow-md shadow-brand-green/5`
+                                        : "bg-slate-50/60 border-slate-200/80 hover:bg-white hover:border-slate-350 hover:shadow-md"
                                 )}
                             >
-                                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-2.5 border", active ? `${dt.bg} ${dt.border}` : "bg-white border-slate-200")}>
-                                    <Icon className={cn("w-4 h-4", active ? dt.color : "text-slate-400")} />
+                                <div className={cn("w-8.5 h-8.5 rounded-xl flex items-center justify-center mb-3 border transition-all duration-300", active ? `${dt.bg} ${dt.border} scale-110` : "bg-white border-slate-200 text-slate-400")}>
+                                    <Icon className={cn("w-4.5 h-4.5", active ? dt.color : "text-slate-400")} />
                                 </div>
-                                <p className={cn("text-xs font-bold leading-snug", active ? dt.color : "text-slate-700")}>
+                                <p className={cn("text-xs font-bold leading-snug", active ? `${dt.color} font-extrabold` : "text-slate-700")}>
                                     {dt.label}
                                 </p>
-                                <p className="text-[10px] text-slate-400 font-medium mt-1 leading-snug">
+                                <p className="text-[10px] text-slate-450 font-medium mt-1 leading-relaxed">
                                     {dt.desc}
                                 </p>
                                 {active && (
-                                    <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                                    <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.7)] animate-pulse" />
                                 )}
                             </button>
                         );
@@ -839,24 +839,29 @@ export default function DocumentUploadStep({
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
                     className={cn(
-                        "relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300 group",
+                        "relative border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-350 group overflow-hidden",
                         isDragging
-                            ? "border-brand-green bg-brand-green/5 scale-[1.01]"
-                            : "border-slate-200 hover:border-slate-300 bg-slate-50/50 hover:bg-white"
+                            ? "border-brand-green bg-emerald-50/10 scale-[1.01] shadow-[0_0_20px_rgba(16,185,129,0.1)]"
+                            : "border-slate-200/80 hover:border-slate-350 bg-slate-50/40 hover:bg-white hover:shadow-md"
                     )}
                 >
+                    {isDragging && (
+                        <div className="absolute inset-0 bg-brand-green/2 pointer-events-none animate-pulse" />
+                    )}
                     <div className={cn(
-                        "w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-300",
-                        isDragging ? "bg-brand-green/10 border-brand-green/30 text-brand-green" : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-300 group-hover:text-slate-500"
+                        "w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-300 shadow-sm",
+                        isDragging 
+                            ? "bg-brand-green/10 border-brand-green/30 text-brand-green scale-110 shadow-emerald-100" 
+                            : "bg-white border-slate-200 text-slate-400 group-hover:border-slate-350 group-hover:text-brand-green group-hover:scale-105 group-hover:shadow-sm"
                     )}>
-                        <Upload className="w-6 h-6" />
+                        <Upload className={cn("w-6 h-6", !isDragging && "group-hover:animate-bounce")} />
                     </div>
-                    <div className="text-center">
-                        <p className="text-sm font-bold text-slate-700">
+                    <div className="text-center z-10">
+                        <p className="text-sm font-bold text-slate-700 group-hover:text-slate-800">
                             Drop your document here
                         </p>
-                        <p className="text-xs text-slate-400 font-medium mt-1">
-                            or <span className="text-brand-green font-bold underline underline-offset-2">browse files</span>
+                        <p className="text-xs text-slate-450 font-medium mt-1">
+                            or <span className="text-brand-green font-bold underline underline-offset-2 group-hover:text-emerald-600">browse files</span>
                             {" "}— PDF, JPG, PNG, WebP up to 20 MB
                         </p>
                     </div>
@@ -1017,28 +1022,43 @@ export default function DocumentUploadStep({
     );
 }
 
-// ─── Scan overlay animation ────────────────────────────────────────
-
 function ScanOverlay({ stage, progress }: { stage: string; progress: number }) {
     return (
-        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3">
-            {/* Scanning line */}
-            <div className="relative w-48 h-[2px] bg-white/20 rounded-full overflow-hidden">
-                <div className="absolute inset-y-0 left-0 w-1/2 bg-brand-green rounded-full animate-[scan_1.4s_ease-in-out_infinite]" />
+        <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 overflow-hidden select-none">
+            {/* Grid background effect */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.05)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+            
+            {/* Laser Line */}
+            <div className="absolute left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_#10b981,0_0_5px_#10b981] animate-[sweep_2.5s_ease-in-out_infinite] z-10" />
+            
+            {/* Laser Glow Area */}
+            <div className="absolute left-0 right-0 h-16 bg-gradient-to-b from-emerald-500/10 to-transparent animate-[sweep_glow_2.5s_ease-in-out_infinite] pointer-events-none" />
+
+            <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-md px-4 py-2.5 rounded-2xl shadow-[0_4px_20px_rgba(16,185,129,0.15)] z-20">
+                <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+                <span className="text-xs font-black text-emerald-100 tracking-wide uppercase">{stage || "Scanning..."}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl">
-                <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
-                <span className="text-[11px] font-bold text-white">{stage || "Scanning..."}</span>
-            </div>
-            {/* Progress indicator */}
+            
+            {/* Progress indicator badge */}
             {progress > 0 && (
-                <span className="text-[10px] font-bold text-white/60">{progress}%</span>
+                <div className="bg-slate-900/80 border border-slate-700/50 px-2 py-1 rounded-lg z-20">
+                    <span className="text-[10px] font-mono font-bold text-emerald-400">{progress}% scanned</span>
+                </div>
             )}
+            
             {/* Inject scan keyframe once */}
             <style>{`
-                @keyframes scan {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(300%); }
+                @keyframes sweep {
+                    0% { top: 0%; }
+                    50% { top: 100%; }
+                    100% { top: 0%; }
+                }
+                @keyframes sweep_glow {
+                    0% { top: -64px; opacity: 0; }
+                    25% { opacity: 1; }
+                    50% { top: 100%; opacity: 0; }
+                    75% { opacity: 1; }
+                    100% { top: -64px; opacity: 0; }
                 }
             `}</style>
         </div>

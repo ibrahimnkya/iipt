@@ -37,7 +37,8 @@ import {
     FileCode,
     Receipt,
     Percent,
-    ShieldCheck
+    ShieldCheck,
+    Train
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -788,29 +789,48 @@ export default function CreateOrderPage() {
                                                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                                      Capacity of Proposer <span className="text-rose-500">*</span>
                                                  </label>
-                                                 <div className="relative">
-                                                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                     <select
-                                                         name="proposerCapacity"
-                                                         value={formData.proposerCapacity}
-                                                         onChange={(e) => {
-                                                             const val = e.target.value;
-                                                             setFormData(prev => ({
-                                                                 ...prev,
-                                                                 proposerCapacity: val,
-                                                                 proposerCapacityOther: val !== "Other" ? "" : prev.proposerCapacityOther
-                                                             }));
-                                                         }}
-                                                         required
-                                                         className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                     >
-                                                         <option value="">Select Capacity</option>
-                                                         {PROPOSER_CAPACITY.map((cap) => (
-                                                             <option key={cap.name} value={cap.name}>
-                                                                 {cap.name} ({cap.desc})
-                                                             </option>
-                                                         ))}
-                                                     </select>
+                                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                     {PROPOSER_CAPACITY.map((cap) => {
+                                                         const Icon = cap.icon;
+                                                         const active = formData.proposerCapacity === cap.name;
+                                                         return (
+                                                             <button
+                                                                 key={cap.name}
+                                                                 type="button"
+                                                                 onClick={() => {
+                                                                     setFormData(prev => ({
+                                                                         ...prev,
+                                                                         proposerCapacity: cap.name,
+                                                                         proposerCapacityOther: cap.name !== "Other" ? "" : prev.proposerCapacityOther
+                                                                     }));
+                                                                 }}
+                                                                 className={cn(
+                                                                     "relative p-3.5 rounded-2xl border transition-all duration-350 flex flex-col items-center gap-2.5 text-center cursor-pointer bg-slate-50/40 border-slate-200/80 hover:bg-white hover:border-slate-300 hover:shadow-sm",
+                                                                     active && "border-brand-green bg-emerald-50/5 text-brand-green ring-1 ring-brand-green/10 shadow-sm"
+                                                                 )}
+                                                             >
+                                                                 <div className={cn(
+                                                                     "w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors",
+                                                                     active 
+                                                                         ? "bg-brand-green/10 border-brand-green/20 text-brand-green" 
+                                                                         : "bg-white border-slate-200 text-slate-400"
+                                                                 )}>
+                                                                     <Icon className="w-4 h-4" />
+                                                                 </div>
+                                                                 <div className="flex flex-col min-w-0">
+                                                                     <span className={cn("text-xs font-bold leading-snug", active ? "text-brand-green font-extrabold" : "text-slate-800")}>
+                                                                         {cap.name}
+                                                                     </span>
+                                                                     <span className="text-[9px] text-slate-400 font-medium leading-normal mt-0.5 max-w-[120px] mx-auto truncate sm:whitespace-normal">
+                                                                         {cap.desc}
+                                                                     </span>
+                                                                 </div>
+                                                                 {active && (
+                                                                     <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                                                                 )}
+                                                             </button>
+                                                         );
+                                                     })}
                                                  </div>
                                                  {formData.proposerCapacity === "Other" && (
                                                      <input
@@ -819,7 +839,7 @@ export default function CreateOrderPage() {
                                                          value={formData.proposerCapacityOther}
                                                          onChange={handleChange}
                                                          placeholder="Specify proposer capacity details"
-                                                         className="mt-3 w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-450 text-sm shadow-inner"
+                                                         className="mt-3 w-full px-4 py-3 bg-slate-50/50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-400 text-sm shadow-inner"
                                                      />
                                                  )}
                                              </div>
@@ -833,29 +853,37 @@ export default function CreateOrderPage() {
                                                          </label>
                                                          {aiPrefilledFields.includes("incoterm") && <AiFilledBadge />}
                                                      </div>
-                                                     <div className="relative">
-                                                         <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                         <select
-                                                             name="incoterm"
-                                                             value={formData.incoterm}
-                                                             onChange={(e) => {
-                                                                 const val = e.target.value;
-                                                                 setFormData(prev => ({
-                                                                     ...prev,
-                                                                     incoterm: val,
-                                                                     incotermOther: val !== "Other" ? "" : prev.incotermOther
-                                                                 }));
-                                                             }}
-                                                             required
-                                                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                         >
-                                                             <option value="">Select Incoterm</option>
-                                                             {INCOTERMS.map((term) => (
-                                                                 <option key={term.name} value={term.name}>
-                                                                     {term.name} - {term.desc}
-                                                                 </option>
-                                                             ))}
-                                                         </select>
+                                                     <div className="grid grid-cols-2 gap-3">
+                                                         {INCOTERMS.map((term) => {
+                                                             const active = formData.incoterm === term.name;
+                                                             return (
+                                                                 <button
+                                                                     key={term.name}
+                                                                     type="button"
+                                                                     onClick={() => {
+                                                                         setFormData(prev => ({
+                                                                             ...prev,
+                                                                             incoterm: term.name,
+                                                                             incotermOther: term.name !== "Other" ? "" : prev.incotermOther
+                                                                         }));
+                                                                     }}
+                                                                     className={cn(
+                                                                         "relative p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer bg-slate-50/40 border-slate-200/80 hover:bg-white hover:border-slate-350 hover:shadow-sm flex flex-col justify-between min-h-[72px]",
+                                                                         active && "border-brand-green bg-emerald-50/5 ring-1 ring-brand-green/10 shadow-sm"
+                                                                     )}
+                                                                 >
+                                                                     <span className={cn("text-xs font-bold", active ? "text-brand-green font-extrabold" : "text-slate-800")}>
+                                                                         {term.name}
+                                                                     </span>
+                                                                     <span className="text-[9.5px] text-slate-400 font-medium leading-normal mt-1 block">
+                                                                         {term.desc}
+                                                                     </span>
+                                                                     {active && (
+                                                                         <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                                                                     )}
+                                                                 </button>
+                                                             );
+                                                         })}
                                                      </div>
                                                      {formData.incoterm === "Other" && (
                                                          <input
@@ -909,29 +937,49 @@ export default function CreateOrderPage() {
                                         <div className="space-y-6">
                                             {/* Nature of Cargo */}
                                             <HighlightedIfAi filled={aiPrefilledFields.includes("cargoNature")}>
-                                                <div className="space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                            Nature of Cargo <span className="text-rose-500">*</span>
-                                                        </label>
-                                                        {aiPrefilledFields.includes("cargoNature") && <AiFilledBadge />}
-                                                    </div>
-                                                    <div className="relative">
-                                                        <Box className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                        <select
-                                                            name="cargoNature"
-                                                            value={formData.cargoNature}
-                                                            onChange={handleChange}
-                                                            required
-                                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                        >
-                                                            <option value="">Select Cargo Nature</option>
-                                                            {CARGO_NATURE_OPTIONS.map((nature) => (
-                                                                 <option key={nature.name} value={nature.name}>
-                                                                     {nature.name} - {nature.desc}
-                                                                 </option>
-                                                             ))}
-                                                         </select>
+                                                 <div className="space-y-3">
+                                                     <div className="flex items-center justify-between">
+                                                         <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                             Nature of Cargo <span className="text-rose-500">*</span>
+                                                         </label>
+                                                         {aiPrefilledFields.includes("cargoNature") && <AiFilledBadge />}
+                                                     </div>
+                                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                         {CARGO_NATURE_OPTIONS.map((nature) => {
+                                                             const Icon = nature.icon;
+                                                             const active = formData.cargoNature === nature.name;
+                                                             return (
+                                                                 <button
+                                                                     key={nature.name}
+                                                                     type="button"
+                                                                     onClick={() => setFormData(prev => ({ ...prev, cargoNature: nature.name }))}
+                                                                     className={cn(
+                                                                         "relative p-3.5 rounded-2xl border transition-all duration-350 flex flex-col items-center gap-2.5 text-center cursor-pointer bg-slate-50/40 border-slate-200/80 hover:bg-white hover:border-slate-300 hover:shadow-sm",
+                                                                         active && "border-brand-green bg-emerald-50/5 text-brand-green ring-1 ring-brand-green/10 shadow-sm"
+                                                                     )}
+                                                                 >
+                                                                     <div className={cn(
+                                                                         "w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors",
+                                                                         active 
+                                                                             ? "bg-brand-green/10 border-brand-green/20 text-brand-green" 
+                                                                             : "bg-white border-slate-200 text-slate-400"
+                                                                     )}>
+                                                                         <Icon className="w-4 h-4" />
+                                                                     </div>
+                                                                     <div className="flex flex-col min-w-0">
+                                                                         <span className={cn("text-xs font-bold leading-snug", active ? "text-brand-green font-extrabold" : "text-slate-800")}>
+                                                                             {nature.name}
+                                                                         </span>
+                                                                         <span className="text-[9px] text-slate-400 font-medium leading-normal mt-0.5 max-w-[120px] mx-auto truncate sm:whitespace-normal">
+                                                                             {nature.desc}
+                                                                         </span>
+                                                                     </div>
+                                                                     {active && (
+                                                                         <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                                                                     )}
+                                                                 </button>
+                                                             );
+                                                         })}
                                                      </div>
                                                  </div>
                                              </HighlightedIfAi>
@@ -945,29 +993,48 @@ export default function CreateOrderPage() {
                                                          </label>
                                                          {aiPrefilledFields.includes("packagingMethod") && <AiFilledBadge />}
                                                      </div>
-                                                     <div className="relative">
-                                                         <Warehouse className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                         <select
-                                                             name="packagingMethod"
-                                                             value={formData.packagingMethod}
-                                                             onChange={(e) => {
-                                                                 const val = e.target.value;
-                                                                 setFormData(prev => ({
-                                                                     ...prev,
-                                                                     packagingMethod: val,
-                                                                     packagingMethodOther: val !== "Other" ? "" : prev.packagingMethodOther
-                                                                 }));
-                                                             }}
-                                                             required
-                                                             className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                         >
-                                                             <option value="">Select Packaging Method</option>
-                                                             {PACKAGING_METHODS.map((method) => (
-                                                                 <option key={method.name} value={method.name}>
-                                                                     {method.name} - {method.desc}
-                                                                 </option>
-                                                             ))}
-                                                         </select>
+                                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                         {PACKAGING_METHODS.map((method) => {
+                                                             const Icon = method.icon;
+                                                             const active = formData.packagingMethod === method.name;
+                                                             return (
+                                                                 <button
+                                                                     key={method.name}
+                                                                     type="button"
+                                                                     onClick={() => {
+                                                                         setFormData(prev => ({
+                                                                             ...prev,
+                                                                             packagingMethod: method.name,
+                                                                             packagingMethodOther: method.name !== "Other" ? "" : prev.packagingMethodOther
+                                                                         }));
+                                                                     }}
+                                                                     className={cn(
+                                                                         "relative p-3.5 rounded-2xl border transition-all duration-350 flex flex-col items-center gap-2.5 text-center cursor-pointer bg-slate-50/40 border-slate-200/80 hover:bg-white hover:border-slate-300 hover:shadow-sm",
+                                                                         active && "border-brand-green bg-emerald-50/5 text-brand-green ring-1 ring-brand-green/10 shadow-sm"
+                                                                     )}
+                                                                 >
+                                                                     <div className={cn(
+                                                                         "w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors",
+                                                                         active 
+                                                                             ? "bg-brand-green/10 border-brand-green/20 text-brand-green" 
+                                                                             : "bg-white border-slate-200 text-slate-400"
+                                                                     )}>
+                                                                         <Icon className="w-4 h-4" />
+                                                                     </div>
+                                                                     <div className="flex flex-col min-w-0">
+                                                                         <span className={cn("text-xs font-bold leading-snug", active ? "text-brand-green font-extrabold" : "text-slate-800")}>
+                                                                             {method.name}
+                                                                         </span>
+                                                                         <span className="text-[9px] text-slate-405 font-medium leading-normal mt-0.5 max-w-[120px] mx-auto truncate sm:whitespace-normal">
+                                                                             {method.desc}
+                                                                         </span>
+                                                                     </div>
+                                                                     {active && (
+                                                                         <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                                                                     )}
+                                                                 </button>
+                                                             );
+                                                         })}
                                                      </div>
                                                      {formData.packagingMethod === "Other" && (
                                                          <input
@@ -1076,118 +1143,131 @@ export default function CreateOrderPage() {
                                         </div>
 
                                         <div className="space-y-6">
-                                            {/* Origin country/port */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <HighlightedIfAi filled={aiPrefilledFields.includes("originCountry")}>
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center justify-between">
-                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                                Country of Origin <span className="text-rose-500">*</span>
-                                                            </label>
-                                                            {aiPrefilledFields.includes("originCountry") && <AiFilledBadge />}
-                                                        </div>
-                                                        <select
-                                                            name="originCountry"
-                                                            value={formData.originCountry}
-                                                            onChange={handleChange}
-                                                            required
-                                                            className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                        >
-                                                            <option value="" className="text-slate-400">Select Country</option>
-                                                            {countries.map((c) => (
-                                                                <option key={c.id} value={c.name}>
-                                                                    {c.name}
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                            {/* Origin / Destination Journey & Route Visualizer */}
+                                            <div className="bg-slate-50/40 border border-slate-200/60 rounded-3xl p-5 sm:p-6 relative overflow-hidden space-y-6">
+                                                {/* Visual Route Connecting Line (Desktop) */}
+                                                <div className="absolute top-[80px] left-[50%] -translate-x-[50%] hidden sm:flex flex-col items-center gap-1.5 z-0 pointer-events-none">
+                                                    <div className="w-[1.5px] h-14 bg-dashed border-l border-dashed border-slate-300" />
+                                                    <div className="w-7 h-7 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm text-slate-400 animate-pulse">
+                                                        <ArrowRight className="w-3.5 h-3.5" />
                                                     </div>
-                                                </HighlightedIfAi>
+                                                </div>
 
-                                                <HighlightedIfAi filled={aiPrefilledFields.includes("originPort")}>
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center justify-between">
-                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                                Port of Origin <span className="text-rose-500">*</span>
-                                                            </label>
-                                                            {aiPrefilledFields.includes("originPort") && <AiFilledBadge />}
-                                                        </div>
-                                                        <div className="relative">
-                                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                            <select
-                                                                name="originPort"
-                                                                value={formData.originPort}
-                                                                onChange={handleChange}
-                                                                required
-                                                                disabled={!formData.originCountry}
-                                                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"
-                                                            >
-                                                                <option value="" className="text-slate-400">Select Port</option>
-                                                                {filteredOriginPorts.map((p) => (
-                                                                    <option key={p.id} value={p.name}>
-                                                                        {p.name} ({p.code})
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                </HighlightedIfAi>
-                                            </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-6 relative z-10">
+                                                    {/* Origin block */}
+                                                    <div className="space-y-4">
+                                                        <HighlightedIfAi filled={aiPrefilledFields.includes("originCountry")}>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                        Country of Origin <span className="text-rose-500">*</span>
+                                                                    </label>
+                                                                    {aiPrefilledFields.includes("originCountry") && <AiFilledBadge />}
+                                                                </div>
+                                                                <select
+                                                                    name="originCountry"
+                                                                    value={formData.originCountry}
+                                                                    onChange={handleChange}
+                                                                    required
+                                                                    className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                                >
+                                                                    <option value="" className="text-slate-400">Select Country</option>
+                                                                    {countries.map((c) => (
+                                                                        <option key={c.id} value={c.name}>
+                                                                            {c.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </HighlightedIfAi>
 
-                                            {/* Destination country/port */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <HighlightedIfAi filled={aiPrefilledFields.includes("destinationCountry")}>
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center justify-between">
-                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                                Country of Destination <span className="text-rose-500">*</span>
-                                                            </label>
-                                                            {aiPrefilledFields.includes("destinationCountry") && <AiFilledBadge />}
-                                                        </div>
-                                                        <select
-                                                            name="destinationCountry"
-                                                            value={formData.destinationCountry}
-                                                            onChange={handleChange}
-                                                            required
-                                                            className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                        >
-                                                            <option value="" className="text-slate-400">Select Country</option>
-                                                            {countries.map((c) => (
-                                                                <option key={c.id} value={c.name}>
-                                                                    {c.name}
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                                        <HighlightedIfAi filled={aiPrefilledFields.includes("originPort")}>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                        Port of Origin <span className="text-rose-500">*</span>
+                                                                    </label>
+                                                                    {aiPrefilledFields.includes("originPort") && <AiFilledBadge />}
+                                                                </div>
+                                                                <div className="relative">
+                                                                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                                    <select
+                                                                        name="originPort"
+                                                                        value={formData.originPort}
+                                                                        onChange={handleChange}
+                                                                        required
+                                                                        disabled={!formData.originCountry}
+                                                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"
+                                                                    >
+                                                                        <option value="" className="text-slate-400">Select Port</option>
+                                                                        {filteredOriginPorts.map((p) => (
+                                                                            <option key={p.id} value={p.name}>
+                                                                                {p.name} ({p.code})
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </HighlightedIfAi>
                                                     </div>
-                                                </HighlightedIfAi>
 
-                                                <HighlightedIfAi filled={aiPrefilledFields.includes("destinationPort")}>
-                                                    <div className="space-y-3">
-                                                        <div className="flex items-center justify-between">
-                                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                                                Port of Destination <span className="text-rose-500">*</span>
-                                                            </label>
-                                                            {aiPrefilledFields.includes("destinationPort") && <AiFilledBadge />}
-                                                        </div>
-                                                        <div className="relative">
-                                                            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                            <select
-                                                                name="destinationPort"
-                                                                value={formData.destinationPort}
-                                                                onChange={handleChange}
-                                                                required
-                                                                disabled={!formData.destinationCountry}
-                                                                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"
-                                                            >
-                                                                <option value="" className="text-slate-400">Select Port</option>
-                                                                {filteredDestPorts.map((p) => (
-                                                                    <option key={p.id} value={p.name}>
-                                                                        {p.name} ({p.code})
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
+                                                    {/* Destination block */}
+                                                    <div className="space-y-4">
+                                                        <HighlightedIfAi filled={aiPrefilledFields.includes("destinationCountry")}>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                        Country of Destination <span className="text-rose-500">*</span>
+                                                                    </label>
+                                                                    {aiPrefilledFields.includes("destinationCountry") && <AiFilledBadge />}
+                                                                </div>
+                                                                <select
+                                                                    name="destinationCountry"
+                                                                    value={formData.destinationCountry}
+                                                                    onChange={handleChange}
+                                                                    required
+                                                                    className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
+                                                                >
+                                                                    <option value="" className="text-slate-400">Select Country</option>
+                                                                    {countries.map((c) => (
+                                                                        <option key={c.id} value={c.name}>
+                                                                            {c.name}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </HighlightedIfAi>
+
+                                                        <HighlightedIfAi filled={aiPrefilledFields.includes("destinationPort")}>
+                                                            <div className="space-y-3">
+                                                                <div className="flex items-center justify-between">
+                                                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                                                        Port of Destination <span className="text-rose-500">*</span>
+                                                                    </label>
+                                                                    {aiPrefilledFields.includes("destinationPort") && <AiFilledBadge />}
+                                                                </div>
+                                                                <div className="relative">
+                                                                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                                                    <select
+                                                                        name="destinationPort"
+                                                                        value={formData.destinationPort}
+                                                                        onChange={handleChange}
+                                                                        required
+                                                                        disabled={!formData.destinationCountry}
+                                                                        className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed shadow-sm"
+                                                                    >
+                                                                        <option value="" className="text-slate-400">Select Port</option>
+                                                                        {filteredDestPorts.map((p) => (
+                                                                            <option key={p.id} value={p.name}>
+                                                                                {p.name} ({p.code})
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </HighlightedIfAi>
                                                     </div>
-                                                </HighlightedIfAi>
+                                                </div>
                                             </div>
 
                                             {/* Mode of Transport */}
@@ -1199,22 +1279,37 @@ export default function CreateOrderPage() {
                                                         </label>
                                                         {aiPrefilledFields.includes("transportMode") && <AiFilledBadge />}
                                                     </div>
-                                                    <div className="relative">
-                                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                                        <select
-                                                            name="transportMode"
-                                                            value={formData.transportMode}
-                                                            onChange={handleChange}
-                                                            required
-                                                            className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                        >
-                                                            <option value="">Select Transport Mode</option>
-                                                            {TRANSPORT_MODES.map((mode) => (
-                                                                <option key={mode} value={mode}>
-                                                                    {mode}
-                                                                </option>
-                                                            ))}
-                                                        </select>
+                                                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                                        {TRANSPORT_MODES.map((mode) => {
+                                                            const active = formData.transportMode === mode;
+                                                            const Icon = mode === "Sea" ? Ship : mode === "Air" ? Plane : mode === "Road" ? Truck : mode === "Rail" ? Train : Globe;
+                                                            return (
+                                                                <button
+                                                                    key={mode}
+                                                                    type="button"
+                                                                    onClick={() => setFormData(prev => ({ ...prev, transportMode: mode }))}
+                                                                    className={cn(
+                                                                        "relative p-3.5 rounded-2xl border transition-all duration-300 flex flex-col items-center gap-2 text-center cursor-pointer bg-slate-50/40 border-slate-200/80 hover:bg-white hover:border-slate-355 hover:shadow-sm",
+                                                                        active && "border-brand-green bg-emerald-50/5 text-brand-green ring-1 ring-brand-green/10 shadow-sm"
+                                                                    )}
+                                                                >
+                                                                    <div className={cn(
+                                                                        "w-8.5 h-8.5 rounded-xl flex items-center justify-center border transition-colors",
+                                                                        active 
+                                                                            ? "bg-brand-green/10 border-brand-green/20 text-brand-green" 
+                                                                            : "bg-white border-slate-200 text-slate-400"
+                                                                    )}>
+                                                                        <Icon className="w-4 h-4" />
+                                                                    </div>
+                                                                    <span className={cn("text-xs font-bold leading-none", active ? "text-brand-green font-extrabold" : "text-slate-800")}>
+                                                                        {mode}
+                                                                    </span>
+                                                                    {active && (
+                                                                        <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             </HighlightedIfAi>
@@ -1503,7 +1598,7 @@ export default function CreateOrderPage() {
                                             )}
 
                                             {/* Value inputs */}
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-slate-100 pt-5">
+                                            <div className="space-y-6 border-t border-slate-100 pt-5">
                                                 <HighlightedIfAi filled={aiPrefilledFields.includes("invoiceValue") || aiPrefilledFields.includes("currency")}>
                                                     <div className="space-y-3">
                                                         <div className="flex items-center justify-between">
@@ -1544,18 +1639,48 @@ export default function CreateOrderPage() {
                                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
                                                         Valuation Basis <span className="text-rose-500">*</span>
                                                     </label>
-                                                    <select
-                                                        name="valuationBasis"
-                                                        value={formData.valuationBasis}
-                                                        onChange={handleChange}
-                                                        className="w-full px-4 py-3 bg-white border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold text-sm cursor-pointer shadow-sm"
-                                                    >
-                                                        {VALUATION_BASIS.map((basis) => (
-                                                            <option key={basis.name} value={basis.name}>
-                                                                {basis.name} - {basis.name === "CIF" ? "Invoice + 10%" : "Base Invoice"}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                        {VALUATION_BASIS.map((basis) => {
+                                                            const active = formData.valuationBasis === basis.name;
+                                                            return (
+                                                                <button
+                                                                    key={basis.name}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setFormData(prev => ({
+                                                                            ...prev,
+                                                                            valuationBasis: basis.name,
+                                                                            valuationBasisOther: basis.name !== "Other" ? "" : prev.valuationBasisOther
+                                                                        }));
+                                                                    }}
+                                                                    className={cn(
+                                                                        "relative p-3.5 rounded-2xl border transition-all duration-300 text-left cursor-pointer bg-slate-50/40 border-slate-200/80 hover:bg-white hover:border-slate-350 hover:shadow-sm flex flex-col justify-between min-h-[80px]",
+                                                                        active && "border-brand-green bg-emerald-50/5 ring-1 ring-brand-green/10 shadow-sm"
+                                                                    )}
+                                                                >
+                                                                    <span className={cn("text-xs font-bold", active ? "text-brand-green font-extrabold" : "text-slate-800")}>
+                                                                        {basis.name}
+                                                                    </span>
+                                                                    <span className="text-[9.5px] text-slate-400 font-medium leading-normal mt-1 block">
+                                                                        {basis.desc}
+                                                                    </span>
+                                                                    {active && (
+                                                                        <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-brand-green shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    {formData.valuationBasis === "Other" && (
+                                                        <input
+                                                            type="text"
+                                                            name="valuationBasisOther"
+                                                            value={formData.valuationBasisOther}
+                                                            onChange={handleChange}
+                                                            placeholder="Specify valuation basis details"
+                                                            className="mt-3 w-full px-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/10 focus:border-brand-green transition-all duration-300 text-slate-900 font-semibold placeholder-slate-400 text-sm shadow-inner animate-in slide-in-from-top-2 duration-200"
+                                                        />
+                                                    )}
                                                 </div>
                                             </div>
 
