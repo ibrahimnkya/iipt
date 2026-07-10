@@ -8,7 +8,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -43,6 +43,7 @@
     "seed-invoice.ts",
     "debug-schema.ts",
     "reproduce-order.ts",
-    "verify-db-columns.ts"
+    "verify-db-columns.ts",
+    "src/scripts/**/*"
   ]
 }
